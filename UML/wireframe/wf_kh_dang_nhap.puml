@@ -1,0 +1,33 @@
+@startsalt wf_kh_dang_nhap
+{
+  {+
+    { <b>BookStore</b> | "Tìm sách..." | [Tìm] | ^VI^EN^ | [Giỏ hàng (0)] | [Đăng nhập] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    { [Trang chủ] | [Sách] | [Đơn hàng của tôi] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxx</color> | {+
+      <b>Đăng nhập</b>
+      Thông báo lỗi (nếu có)
+      {
+      Tên đăng nhập | "                    "
+      Mật khẩu | "                    "
+    }
+      [] Ghi nhớ đăng nhập
+      [Đăng nhập]
+      { Chưa có tài khoản? | [Đăng ký] }
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+  }
+  .
+  {+
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

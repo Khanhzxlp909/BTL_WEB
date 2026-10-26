@@ -1,0 +1,44 @@
+@startuml uc_m3_gio_hang
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 3: Quản lý giỏ hàng"
+
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 3: Quản lý giỏ hàng" {
+  usecase "Xem giỏ hàng" as UC_XEM
+  usecase "Thêm sách vào giỏ" as UC_THEM
+  usecase "Sửa số lượng sách trong giỏ" as UC_SUA
+  usecase "Xóa sách khỏi giỏ" as UC_XOA
+  usecase "Làm trống giỏ hàng" as UC_TRONG
+}
+
+' --- Customer ---
+Customer --> UC_XEM
+Customer --> UC_THEM
+Customer --> UC_SUA
+Customer --> UC_XOA
+Customer --> UC_TRONG
+
+' --- Admin (mua hàng như Customer) ---
+Admin --> UC_XEM
+Admin --> UC_THEM
+Admin --> UC_SUA
+Admin --> UC_XOA
+Admin --> UC_TRONG
+
+@enduml

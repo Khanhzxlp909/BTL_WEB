@@ -1,0 +1,138 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = ViewText.T("Tổng quan hệ thống", "System Overview");
+    var activeModules = new (string Vi, string En, string NoteVi, string NoteEn, string Href)[]
+    {
+        ("Tổng quan & Tài khoản", "Overview & Accounts", "Thống kê 5 chỉ số cốt lõi, xác thực, phân quyền Admin/Customer, đa ngôn ngữ VI/EN", "5 core KPIs, authentication, Admin/Customer roles, VI/EN localization", "/admin"),
+        ("Sách", "Books Management", "Thêm, sửa, ngừng bán, khôi phục và tải ảnh bìa sách", "Create, edit, soft-delete, restore books and upload covers", "/admin/sach"),
+        ("Thể loại", "Categories", "Quản lý danh mục thể loại sách, kiểm tra ràng buộc sách tham chiếu", "Manage book categories with book reference checks", "/admin/the-loai"),
+        ("Kho", "Inventory", "Quản lý tồn kho, nhập kho kiểm soát cạnh tranh, lịch sử biến động và ngưỡng tồn thấp", "Stock levels, concurrency-safe imports, movement history, and low-stock threshold", "/admin/kho")
+    };
+    var upcomingModules = new (string Vi, string En, string NoteVi, string NoteEn)[]
+    {
+        ("Đơn hàng", "Orders", "Quản lý và xử lý trạng thái đơn hàng", "Order processing and status workflow"),
+        ("Đánh giá", "Reviews", "Kiểm duyệt ẩn/hiện đánh giá độc giả", "Moderate customer book reviews"),
+        ("Khách hàng", "Customers", "Tra cứu và khóa/mở khóa tài khoản khách", "Search and lock/unlock customer accounts"),
+        ("Báo cáo", "Revenue Reports", "Thống kê và báo cáo doanh thu", "Revenue analytics and reporting")
+    };
+}
+
+<div class="row g-4">
+    <aside class="col-12 col-lg-3">
+        @await Html.PartialAsync("_AdminNav")
+    </aside>
+
+    <div class="col-12 col-lg-9">
+        <section class="card bs-surface-card mb-4" aria-labelledby="admin-overview-heading">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <div>
+                        <h1 id="admin-overview-heading" class="h3 bs-serif-heading mb-1">
+                            @ViewText.T("Tổng quan hệ thống", "System Overview")
+                        </h1>
+                        <p class="text-secondary small mb-0">
+                            @ViewText.T(
+                                "Số liệu thực tế truy vấn trực tiếp từ cơ sở dữ liệu BookStore.",
+                                "Live operational metrics queried directly from the BookStore database.")
+                        </p>
+                    </div>
+                    <span class="badge bs-badge-category">
+                        @ViewText.T("Giai đoạn 2", "Phase 2")
+                    </span>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-4">
+                        <div class="bs-metric-card bs-metric-delivered p-3 rounded-3 border h-100">
+                            <div class="small text-secondary fw-medium mb-1">
+                                @ViewText.T("Đơn đã giao", "Delivered Orders")
+                            </div>
+                            <div class="display-6 fw-bold mb-0">@Model.DeliveredOrders</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="bs-metric-card bs-metric-pending p-3 rounded-3 border h-100">
+                            <div class="small text-secondary fw-medium mb-1">
+                                @ViewText.T("Đơn chờ xác nhận", "Pending Orders")
+                            </div>
+                            <div class="display-6 fw-bold mb-0">@Model.PendingOrders</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="bs-metric-card bs-metric-cancelled p-3 rounded-3 border h-100">
+                            <div class="small text-secondary fw-medium mb-1">
+                                @ViewText.T("Đơn bị hủy", "Cancelled Orders")
+                            </div>
+                            <div class="display-6 fw-bold mb-0">@Model.CancelledOrders</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="bs-metric-card p-3 rounded-3 border h-100">
+                            <div class="small text-secondary fw-medium mb-1">
+                                @ViewText.T("Số sách", "Active Books")
+                            </div>
+                            <div class="display-6 fw-bold mb-0">@Model.Books</div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="bs-metric-card p-3 rounded-3 border h-100">
+                            <div class="small text-secondary fw-medium mb-1">
+                                @ViewText.T("Số khách hàng", "Registered Customers")
+                            </div>
+                            <div class="display-6 fw-bold mb-0">@Model.Customers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card bs-surface-card" aria-labelledby="admin-roadmap-heading">
+            <div class="card-body p-4">
+                <h2 id="admin-roadmap-heading" class="h5 bs-serif-heading mb-3">
+                    @ViewText.T("Tiến độ triển khai các phân hệ quản trị", "Admin Module Implementation Progress")
+                </h2>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>@ViewText.T("Phân hệ", "Module")</th>
+                                <th>@ViewText.T("Phạm vi chức năng", "Scope")</th>
+                                <th class="text-end">@ViewText.T("Trạng thái", "Status")</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in activeModules)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <a href="@item.Href" class="text-decoration-none">@ViewText.T(item.Vi, item.En)</a>
+                                    </td>
+                                    <td class="small text-secondary">@ViewText.T(item.NoteVi, item.NoteEn)</td>
+                                    <td class="text-end">
+                                        <span class="badge bs-badge-instock">@ViewText.T("Đã hoạt động", "Active")</span>
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var item in upcomingModules)
+                            {
+                                <tr>
+                                    <td class="fw-medium">@ViewText.T(item.Vi, item.En)</td>
+                                    <td class="small text-secondary">@ViewText.T(item.NoteVi, item.NoteEn)</td>
+                                    <td class="text-end">
+                                        <span class="badge text-bg-light border">@ViewText.T("Giai đoạn tiếp theo", "Next phase")</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

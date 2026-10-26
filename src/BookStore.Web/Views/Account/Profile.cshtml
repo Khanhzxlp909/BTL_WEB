@@ -1,0 +1,95 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = ViewText.T("Hồ sơ cá nhân", "My Profile");
+}
+
+<section class="row justify-content-center py-2">
+    <div class="col-12 col-lg-7">
+        <div class="card bs-surface-card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                    <div>
+                        <h1 class="h3 bs-serif-heading mb-1">
+                            @ViewText.T("Hồ sơ cá nhân", "Personal Profile")
+                        </h1>
+                        <p class="text-secondary small mb-0">
+                            @ViewText.T(
+                                "Tên đăng nhập và email chỉ đọc; bạn có thể cập nhật họ tên và số điện thoại liên hệ.",
+                                "Username and email are read-only; you can update your full name and phone number.")
+                        </p>
+                    </div>
+                    <a href="/tai-khoan/doi-mat-khau" class="btn btn-sm btn-outline-secondary">
+                        @ViewText.T("Đổi mật khẩu", "Change password")
+                    </a>
+                </div>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger small" role="alert"></div>
+                }
+
+                <form method="post" action="/tai-khoan/ho-so" asp-antiforgery="true" novalidate>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label for="profile-username-readonly" class="form-label fw-semibold">
+                                @ViewText.T("Tên đăng nhập (Chỉ đọc)", "Username (Read-only)")
+                            </label>
+                            <input id="profile-username-readonly"
+                                   type="text"
+                                   value="@Model.UserName"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="profile-email-readonly" class="form-label fw-semibold">
+                                @ViewText.T("Email (Chỉ đọc)", "Email (Read-only)")
+                            </label>
+                            <input id="profile-email-readonly"
+                                   type="email"
+                                   value="@Model.Email"
+                                   class="form-control bg-light"
+                                   readonly
+                                   disabled />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold">
+                            @ViewText.T("Họ và tên", "Full Name")
+                        </label>
+                        <input asp-for="FullName"
+                               class="form-control"
+                               maxlength="100"
+                               autocomplete="name"
+                               placeholder="@ViewText.T("Nhập họ và tên của bạn", "Enter your full name")" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="PhoneNumber" class="form-label fw-semibold">
+                            @ViewText.T("Số điện thoại", "Phone Number")
+                        </label>
+                        <input asp-for="PhoneNumber"
+                               type="tel"
+                               class="form-control"
+                               maxlength="20"
+                               autocomplete="tel"
+                               placeholder="@ViewText.T("Ví dụ: 0901234567 hoặc +84 90 123 4567", "Example: 0901234567 or +84 90 123 4567")" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn bs-btn-primary px-4">
+                            @ViewText.T("Lưu thay đổi", "Save changes")
+                        </button>
+                        <a href="/tai-khoan/doi-mat-khau" class="btn btn-outline-secondary">
+                            @ViewText.T("Đổi mật khẩu", "Change password")
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

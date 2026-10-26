@@ -1,0 +1,69 @@
+@startsalt wf_kh_trang_chu
+{
+  {+
+    { <b>BookStore</b> | "Tìm sách theo tên, tác giả, mã sách" | [Tìm] | ^VI^EN^ | [Giỏ hàng (0)] | [Đăng nhập] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    { [Trang chủ] | [Sách] | [Đơn hàng của tôi] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    .
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color><b>BANNER (hình tĩnh)</b>
+    .
+    .
+    .
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Thể loại sách</b>
+    { [Thể loại 1] | [Thể loại 2] | [Thể loại 3] | [Thể loại 4] | [Thể loại 5] | [Xem tất cả] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Sách mới nhất</b>
+    {
+      {+
+      [   Ảnh bìa   ]
+      Tên sách
+      Tác giả
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      [   Ảnh bìa   ]
+      Tên sách
+      Tác giả
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      [   Ảnh bìa   ]
+      Tên sách
+      Tác giả
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      [   Ảnh bìa   ]
+      Tên sách
+      Tác giả
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+    }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

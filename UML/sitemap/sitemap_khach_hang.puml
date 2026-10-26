@@ -1,0 +1,25 @@
+@startmindmap sitemap_khach_hang
+skinparam shadowing false
+
+title "Sitemap giao diện khách hàng (Admin dùng chung khi mua hàng)"
+
+* BookStore\nGiao diện khách hàng
+** Trang chủ\n(Công khai: banner,\nthể loại sách, sách mới nhất)
+** Sách
+*** Danh sách sách\n(Công khai)
+*** Chi tiết sách\n(Công khai)
+**** Khối đánh giá\n(Xem: công khai;\nviết, sửa: Customer đã nhận sách)
+** Tài khoản
+*** Đăng ký\n(Công khai)
+*** Đăng nhập\n(Công khai)
+*** Hồ sơ cá nhân\n(Cần đăng nhập)
+*** Đổi mật khẩu\n(Cần đăng nhập)
+** Mua hàng
+*** Giỏ hàng\n(Cần đăng nhập)
+*** Đặt hàng\n(Cần đăng nhập)
+*** Đặt hàng thành công\n(Cần đăng nhập)
+** Đơn hàng
+*** Lịch sử đơn hàng\n(Cần đăng nhập)
+**** Chi tiết đơn hàng\n(Cần đăng nhập)
+
+@endmindmap

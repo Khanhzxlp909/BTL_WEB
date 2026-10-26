@@ -1,0 +1,68 @@
+@startsalt wf_mobile_trang_chu
+{
+  {+
+    { [Menu] | <b>BookStore</b> | [Giỏ hàng (0)] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    { "Tìm sách..." | [Tìm] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    .
+    <color:white>xxxxxxxxxxxx</color><b>BANNER (hình tĩnh)</b>
+    .
+    .
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Thể loại sách</b>
+    { [Thể loại 1] | [Thể loại 2] | [...] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Sách mới nhất</b>
+    {
+      {+
+      [ Ảnh bìa ]
+      Tên sách
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      [ Ảnh bìa ]
+      Tên sách
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxx</color>
+    }
+    }
+    {
+      {+
+      [ Ảnh bìa ]
+      Tên sách
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      [ Ảnh bìa ]
+      Tên sách
+      Giá bán
+      [Thêm vào giỏ]
+      <color:white>xxxxxxxxxxxxxxxxxxxx</color>
+    }
+    }
+    [Xem thêm sách]
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <color:white>xxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

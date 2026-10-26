@@ -1,0 +1,81 @@
+name: bookstore-btl
+
+x-web: &web
+  image: bookstore-btl-web:local
+  build:
+    context: .
+    target: runtime
+  environment: &web-env
+    ASPNETCORE_ENVIRONMENT: Development
+    ASPNETCORE_HTTP_PORTS: "8080"
+    AllowedHosts: localhost;127.0.0.1;[::1];web
+    ConnectionStrings__BookStore: "Server=sqlserver,1433;Database=BookStore;User Id=sa;Password=${BOOKSTORE_SQL_PASSWORD:?Đặt BOOKSTORE_SQL_PASSWORD trong .env};Encrypt=True;TrustServerCertificate=True;"
+  depends_on:
+    sqlserver:
+      condition: service_healthy
+  volumes:
+    - covers:/app/wwwroot/uploads
+    - keys:/home/app/.aspnet/DataProtection-Keys
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: "${BOOKSTORE_SQL_PASSWORD:?Đặt BOOKSTORE_SQL_PASSWORD trong .env}"
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "SQLCMDPASSWORD=\"$$MSSQL_SA_PASSWORD\" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q 'SELECT 1' -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    <<: *web
+    ports:
+      - "127.0.0.1:${BOOKSTORE_HTTP_PORT:-5087}:8080"
+    restart: unless-stopped
+
+  migrate:
+    profiles: [tools]
+    image: bookstore-btl-migration:local
+    build:
+      context: .
+      target: migration
+    environment:
+      ConnectionStrings__BookStore: "Server=sqlserver,1433;Database=BookStore;User Id=sa;Password=${BOOKSTORE_SQL_PASSWORD:?Đặt BOOKSTORE_SQL_PASSWORD trong .env};Encrypt=True;TrustServerCertificate=True;"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  test:
+    profiles: [test]
+    image: bookstore-btl-test:local
+    build:
+      context: .
+      target: test
+    environment:
+      BOOKSTORE_TEST_SQLSERVER: "Server=sqlserver,1433;Database=master;User Id=sa;Password=${BOOKSTORE_SQL_PASSWORD:?Đặt BOOKSTORE_SQL_PASSWORD trong .env};Encrypt=True;TrustServerCertificate=True;"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  initialize:
+    <<: *web
+    profiles: [tools]
+    environment:
+      <<: *web-env
+      BootstrapAdmin__UserName: "${BOOKSTORE_ADMIN_USERNAME:-bookstore_admin}"
+      BootstrapAdmin__Email: "${BOOKSTORE_ADMIN_EMAIL:-admin@example.test}"
+      BootstrapAdmin__Password: "${BOOKSTORE_ADMIN_PASSWORD:-}"
+    command: ["--initialize"]
+    restart: "no"
+
+volumes:
+  sql-data:
+  covers:
+  keys:

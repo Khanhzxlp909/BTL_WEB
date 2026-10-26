@@ -1,0 +1,14 @@
+.git
+.idea
+node_modules
+**/bin
+**/obj
+**/TestResults
+**/appsettings.Local.json
+src/BookStore.Web/wwwroot/lib
+src/BookStore.Web/wwwroot/uploads
+.env
+.env.*
+UML
+*.doc
+*.docx

@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/appsettings.Local.json
+.vs/
+.idea/
+node_modules/
+src/BookStore.Web/wwwroot/lib/
+src/BookStore.Web/wwwroot/uploads/
+*.user
+*.db
+*.db-shm
+*.db-wal
+.env

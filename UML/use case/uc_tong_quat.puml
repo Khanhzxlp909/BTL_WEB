@@ -1,0 +1,51 @@
+@startuml uc_tong_quat
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Sơ đồ Use Case tổng quát - Hệ thống BookStore"
+
+actor "Khách vãng lai" as Guest
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Hệ thống BookStore" {
+  usecase "Quản lý tài khoản" as UC1
+  usecase "Quản lý sách và danh mục" as UC2
+  usecase "Quản lý giỏ hàng" as UC3
+  usecase "Đặt hàng và xử lý đơn" as UC4
+  usecase "Quản lý kho" as UC5
+  usecase "Quản lý đánh giá, khách hàng\nvà báo cáo" as UC6
+}
+
+' --- Khách vãng lai ---
+Guest --> UC1
+Guest --> UC2
+
+' --- Customer ---
+Customer --> UC1
+Customer --> UC2
+Customer --> UC3
+Customer --> UC4
+Customer --> UC6
+
+' --- Admin ---
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+
+@enduml

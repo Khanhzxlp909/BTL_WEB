@@ -1,0 +1,26 @@
+@startmindmap sitemap_admin
+skinparam shadowing false
+
+title "Sitemap giao diện quản trị (chỉ Admin)"
+
+* BookStore\nGiao diện quản trị
+** Tổng quan hệ thống\n(Admin, trang đích sau đăng nhập)
+** Sách
+*** Danh sách sách quản trị\n(Admin)
+** Thể loại
+*** Danh sách thể loại\n(Admin)
+** Kho
+*** Danh sách tồn kho\n(Admin)
+*** Lịch sử biến động kho\n(Admin)
+** Đơn hàng
+*** Danh sách đơn hàng\n(Admin)
+*** Chi tiết đơn hàng\n(Admin)
+** Đánh giá
+*** Danh sách đánh giá\n(Admin)
+** Khách hàng
+*** Danh sách khách hàng\n(Admin)
+** Báo cáo
+*** Báo cáo doanh thu\n(Admin)
+** Chuyển sang cửa hàng\n(liên kết tới giao diện khách hàng)
+
+@endmindmap

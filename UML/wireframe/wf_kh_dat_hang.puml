@@ -1,0 +1,43 @@
+@startsalt wf_kh_dat_hang
+{
+  {+
+    { <b>BookStore</b> | "Tìm sách..." | [Tìm] | ^VI^EN^ | [Giỏ hàng (0)] | [Tên người dùng] | [Đăng xuất] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    { [Trang chủ] | [Sách] | [Đơn hàng của tôi] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {
+    {+
+      <b>Thông tin người nhận</b>
+      {
+      Tên người nhận | "                              "
+      Số điện thoại | "                              "
+      Địa chỉ giao hàng | "                              "
+      Ghi chú | "                              "
+    }
+      <b>Hình thức thanh toán</b>
+      (X) Thanh toán khi nhận hàng (COD)
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      <b>Tóm tắt đơn hàng</b>
+      Thông báo giá thay đổi (nếu có)
+      { Tên sách x Số lượng | Thành tiền }
+      { Tên sách x Số lượng | Thành tiền }
+      Tạm tính
+      Phí giao hàng: 0đ
+      Tổng cộng
+      [Đặt hàng]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+  }
+  .
+  {+
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

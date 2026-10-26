@@ -1,0 +1,51 @@
+@startuml uc_m1_tai_khoan
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 1: Quản lý tài khoản"
+
+actor "Khách vãng lai" as Guest
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 1: Quản lý tài khoản" {
+  usecase "Đăng ký tài khoản" as UC_DK
+  usecase "Đăng nhập" as UC_DN
+  usecase "Đăng xuất" as UC_DX
+  usecase "Xem và sửa hồ sơ cá nhân" as UC_HS
+  usecase "Đổi mật khẩu" as UC_MK
+  usecase "Đổi ngôn ngữ (VI/EN)" as UC_NN
+}
+
+' --- Khách vãng lai ---
+Guest --> UC_DK
+Guest --> UC_DN
+Guest --> UC_NN
+
+' --- Customer ---
+Customer --> UC_DN
+Customer --> UC_DX
+Customer --> UC_HS
+Customer --> UC_MK
+Customer --> UC_NN
+
+' --- Admin ---
+Admin --> UC_DN
+Admin --> UC_DX
+Admin --> UC_HS
+Admin --> UC_MK
+Admin --> UC_NN
+
+@enduml

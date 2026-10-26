@@ -1,0 +1,217 @@
+@{
+    var currentPath = Context.Request.Path.Value ?? "/";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    if (string.IsNullOrWhiteSpace(returnUrl) || !Url.IsLocalUrl(returnUrl))
+    {
+        returnUrl = "/";
+    }
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAdmin = isAuthenticated && User.IsInRole(RoleNames.Admin);
+    var isAdminRoute = currentPath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase);
+    var currentSearch = Context.Request.Query["Search"].ToString();
+    var isErrorView = ViewData.Model is ErrorViewModel;
+    var successMessage = isErrorView ? null : TempData["Success"] as string;
+    var errorMessage = isErrorView ? null : TempData["Error"] as string;
+}
+<!DOCTYPE html>
+<html lang="@ViewText.CurrentCultureCode">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string pageTitle && !string.IsNullOrWhiteSpace(pageTitle) ? $"{pageTitle} - BookStore" : "BookStore")</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body class="bs-body d-flex flex-column min-vh-100">
+    <header class="bs-header border-bottom">
+        <div class="container py-2 py-lg-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-6 col-lg-3 d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary btn-sm d-lg-none"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#bsPrimaryNav"
+                            aria-controls="bsPrimaryNav"
+                            aria-expanded="false"
+                            aria-label="@ViewText.T("Mở menu điều hướng", "Toggle navigation menu")">
+                        @ViewText.T("Menu", "Menu")
+                    </button>
+                    <a class="bs-brand text-decoration-none" href="@(isAdminRoute ? "/admin" : "/")">
+                        <span class="bs-brand-mark">BookStore</span>
+                        <span class="bs-brand-sub d-none d-sm-inline">
+                            @(isAdminRoute
+                                ? ViewText.T("Quản trị", "Administration")
+                                : ViewText.T("Tiệm sách học thuật & văn chương", "Academic & Literary Books"))
+                        </span>
+                    </a>
+                </div>
+
+                <div class="col-12 col-lg-5 order-3 order-lg-2">
+                    <form method="get" action="/sach" class="bs-search-form d-flex gap-2" role="search">
+                        <label for="header-book-search" class="visually-hidden">
+                            @ViewText.T("Tìm sách theo tên, tác giả, mã sách", "Search books by title, author, SKU or ISBN")
+                        </label>
+                        <input id="header-book-search"
+                               type="search"
+                               name="Search"
+                               value="@currentSearch"
+                               maxlength="255"
+                               class="form-control form-control-sm bs-search-input"
+                               placeholder="@ViewText.T("Tìm sách theo tên, tác giả, mã sách...", "Search by title, author, SKU, ISBN...")" />
+                        <button type="submit" class="btn btn-sm bs-btn-primary px-3 text-nowrap">
+                            @ViewText.T("Tìm", "Search")
+                        </button>
+                    </form>
+                </div>
+
+                <div class="col-6 col-lg-4 order-2 order-lg-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
+                    <form method="post" action="/ngon-ngu" asp-antiforgery="true" class="d-inline-flex align-items-center bs-lang-switch" aria-label="@ViewText.T("Chọn ngôn ngữ", "Language switcher")">
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="submit"
+                                    name="culture"
+                                    value="vi"
+                                    class="btn @(ViewText.IsEnglish ? "btn-outline-secondary" : "bs-btn-active-lang")"
+                                    aria-pressed="@(!ViewText.IsEnglish ? "true" : "false")">
+                                VI
+                            </button>
+                            <button type="submit"
+                                    name="culture"
+                                    value="en"
+                                    class="btn @(ViewText.IsEnglish ? "bs-btn-active-lang" : "btn-outline-secondary")"
+                                    aria-pressed="@(ViewText.IsEnglish ? "true" : "false")">
+                                EN
+                            </button>
+                        </div>
+                    </form>
+
+                    @if (isAuthenticated)
+                    {
+                        <a href="/tai-khoan/ho-so" class="btn btn-sm btn-outline-secondary text-truncate bs-user-pill" title="@User.Identity?.Name">
+                            @User.Identity?.Name
+                        </a>
+                        <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                @ViewText.T("Đăng xuất", "Sign out")
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/tai-khoan/dang-nhap" class="btn btn-sm bs-btn-primary">
+                            @ViewText.T("Đăng nhập", "Sign in")
+                        </a>
+                        <a href="/tai-khoan/dang-ky" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-block">
+                            @ViewText.T("Đăng ký", "Register")
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <nav id="bsPrimaryNav" class="bs-subnav collapse d-lg-block border-top" aria-label="@ViewText.T("Điều hướng chính", "Main navigation")">
+            <div class="container">
+                <ul class="nav flex-column flex-lg-row py-1 gap-lg-1">
+                    <li class="nav-item">
+                        <a class="nav-link bs-nav-link @(currentPath == "/" ? "active" : "")" href="/">
+                            @ViewText.T("Trang chủ", "Home")
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link bs-nav-link @(currentPath.StartsWith("/sach", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/sach">
+                            @ViewText.T("Sách", "Books")
+                        </a>
+                    </li>
+                    @if (isAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/ho-so", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/ho-so">
+                                @ViewText.T("Hồ sơ cá nhân", "My Profile")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/doi-mat-khau", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/doi-mat-khau">
+                                @ViewText.T("Đổi mật khẩu", "Change Password")
+                            </a>
+                        </li>
+                        @if (isAdmin)
+                        {
+                            <li class="nav-item ms-lg-auto">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(string.Equals(currentPath, "/admin", StringComparison.OrdinalIgnoreCase) || string.Equals(currentPath, "/admin/", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin">
+                                    @ViewText.T("Tổng quan quản trị", "Admin Dashboard")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/sach", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/sach">
+                                    @ViewText.T("Quản trị sách", "Manage Books")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/the-loai", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/the-loai">
+                                    @ViewText.T("Quản trị thể loại", "Manage Categories")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/kho", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/kho">
+                                    @ViewText.T("Quản trị kho", "Manage Inventory")
+                                </a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="nav-item d-sm-none">
+                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/dang-ky", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/dang-ky">
+                                @ViewText.T("Đăng ký tài khoản", "Create Account")
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="flex-grow-1 py-4">
+        <div class="container">
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show bs-flash-alert" role="alert">
+                    <strong>@ViewText.T("Thành công:", "Success:")</strong> @successMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show bs-flash-alert" role="alert">
+                    <strong>@ViewText.T("Thông báo lỗi:", "Error:")</strong> @errorMessage
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="bs-footer border-top py-4 mt-auto">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+            <div>
+                <span class="fw-semibold">BookStore</span> &mdash;
+                @ViewText.T("Website quản lý và bán sách", "Online Bookstore and Management System")
+            </div>
+            <div class="small text-secondary d-flex flex-wrap gap-3">
+                <a class="link-secondary text-decoration-none" href="/">@ViewText.T("Trang chủ", "Home")</a>
+                <a class="link-secondary text-decoration-none" href="/sach">@ViewText.T("Danh mục sách", "Catalog")</a>
+                <span>@ViewText.T("Múi giờ hiển thị: Asia/Ho_Chi_Minh (UTC+7)", "Display timezone: Asia/Ho_Chi_Minh (UTC+7)")</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/lib/jquery/jquery.min.js"></script>
+    <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

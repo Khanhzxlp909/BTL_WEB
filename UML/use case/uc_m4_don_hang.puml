@@ -1,0 +1,67 @@
+@startuml uc_m4_don_hang
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 4: Đặt hàng và xử lý đơn"
+
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 4: Đặt hàng và xử lý đơn" {
+
+  usecase "Đặt hàng COD" as UC_DAT
+  usecase "Xem lịch sử đơn hàng\ncủa mình" as UC_LS
+  usecase "Xem chi tiết đơn hàng" as UC_CT
+  usecase "Hủy đơn hàng" as UC_HUY
+
+  usecase "Xem và lọc danh sách\nmọi đơn hàng" as UC_DSQT
+  usecase "Xác nhận đơn" as UC_XN
+  usecase "Chuyển đơn sang đang giao" as UC_GIAO
+  usecase "Ghi nhận đã giao\nvà thu tiền COD" as UC_DA_GIAO
+}
+
+' --- Customer ---
+Customer --> UC_DAT
+Customer --> UC_LS
+Customer --> UC_CT
+Customer --> UC_HUY
+
+' --- Admin (mua hàng như Customer) ---
+Admin --> UC_DAT
+Admin --> UC_LS
+Admin --> UC_CT
+Admin --> UC_HUY
+
+' --- Admin: xử lý đơn ---
+Admin --> UC_DSQT
+Admin --> UC_XN
+Admin --> UC_GIAO
+Admin --> UC_DA_GIAO
+
+note right of UC_HUY
+  Customer hủy đơn của mình.
+  Admin hủy đơn bất kỳ.
+  Chỉ khi đơn ở trạng thái
+  PENDING hoặc CONFIRMED.
+end note
+
+note right of UC_CT
+  Customer và Admin (khi mua hàng)
+  chỉ xem đơn của chính mình.
+  Admin xem mọi đơn qua
+  danh sách đơn hàng.
+end note
+
+@enduml

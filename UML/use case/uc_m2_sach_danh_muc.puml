@@ -1,0 +1,70 @@
+@startuml uc_m2_sach_danh_muc
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 2: Quản lý sách và danh mục"
+
+actor "Khách vãng lai" as Guest
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 2: Quản lý sách và danh mục" {
+
+  usecase "Xem danh sách sách\n(phân trang)" as UC_DS
+  usecase "Tìm kiếm sách\n(tên, tác giả, SKU, ISBN)" as UC_TK
+  usecase "Lọc và sắp xếp sách" as UC_LOC
+  usecase "Xem chi tiết sách" as UC_CT
+
+  usecase "Xem danh sách sách quản trị\n(gồm sách ngừng bán)" as UC_DSQT
+  usecase "Thêm sách" as UC_THEM
+  usecase "Sửa sách" as UC_SUA
+  usecase "Ngừng bán sách\n(xóa mềm)" as UC_NGUNG
+  usecase "Khôi phục sách\nngừng bán" as UC_KHOIPHUC
+  usecase "Tải ảnh bìa" as UC_ANH
+
+  usecase "Thêm thể loại" as UC_TL_THEM
+  usecase "Sửa thể loại" as UC_TL_SUA
+  usecase "Xóa mềm thể loại" as UC_TL_XOA
+}
+
+' --- Khách vãng lai ---
+Guest --> UC_DS
+Guest --> UC_CT
+
+' --- Customer ---
+Customer --> UC_DS
+Customer --> UC_CT
+
+' --- Admin ---
+Admin --> UC_DS
+Admin --> UC_CT
+Admin --> UC_DSQT
+Admin --> UC_THEM
+Admin --> UC_SUA
+Admin --> UC_NGUNG
+Admin --> UC_KHOIPHUC
+Admin --> UC_TL_THEM
+Admin --> UC_TL_SUA
+Admin --> UC_TL_XOA
+
+' --- Quan hệ giữa các Use Case ---
+UC_TK .> UC_DS : <<extend>>
+UC_LOC .> UC_DS : <<extend>>
+UC_TK .> UC_DSQT : <<extend>>
+UC_LOC .> UC_DSQT : <<extend>>
+UC_ANH .> UC_THEM : <<extend>>
+UC_ANH .> UC_SUA : <<extend>>
+
+@enduml

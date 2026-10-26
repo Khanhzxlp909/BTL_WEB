@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="BookStore">
+  <rect width="32" height="32" rx="6" fill="#1f4e3d"/>
+  <path d="M8 9.5C8 8.67 8.67 8 9.5 8H15v15.5H9.5A1.5 1.5 0 0 1 8 22V9.5zm16 0C24 8.67 23.33 8 22.5 8H17v15.5h5.5A1.5 1.5 0 0 0 24 22V9.5z" fill="#f8f5ef"/>
+  <path d="M15 8h2v16.5h-2z" fill="#8c4a27"/>
+</svg>

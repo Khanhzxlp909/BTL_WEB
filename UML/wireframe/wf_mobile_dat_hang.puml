@@ -1,0 +1,37 @@
+@startsalt wf_mobile_dat_hang
+{
+  {+
+    { [Menu] | <b>BookStore</b> | [Giỏ hàng (0)] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Thông tin người nhận</b>
+    {
+      Tên người nhận | "                "
+      Số điện thoại | "                "
+      Địa chỉ | "                "
+      Ghi chú | "                "
+    }
+    <b>Hình thức thanh toán</b>
+    (X) Thanh toán khi nhận hàng (COD)
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Tóm tắt đơn hàng</b>
+    Thông báo giá thay đổi (nếu có)
+    { Tên sách x Số lượng | Thành tiền }
+    Tạm tính
+    Phí giao hàng: 0đ
+    Tổng cộng
+    [Đặt hàng]
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <color:white>xxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

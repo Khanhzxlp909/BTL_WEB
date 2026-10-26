@@ -1,0 +1,39 @@
+@startuml uc_m5_kho
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 5: Quản lý kho"
+
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 5: Quản lý kho" {
+  usecase "Xem danh sách tồn kho\n(kèm cảnh báo tồn thấp)" as UC_TON
+  usecase "Nhập kho" as UC_NHAP
+  usecase "Thiết lập ngưỡng cảnh báo\ntồn thấp chung" as UC_NGUONG
+  usecase "Xem lịch sử biến động kho\ncủa từng sách" as UC_LS
+}
+
+Admin --> UC_TON
+Admin --> UC_NHAP
+Admin --> UC_NGUONG
+Admin --> UC_LS
+
+note bottom of UC_LS
+  Lịch sử gồm cả biến động do Admin nhập kho
+  và biến động do đơn hàng (đặt, giao, hủy)
+  được hệ thống tự ghi từ Module 4.
+end note
+
+@enduml

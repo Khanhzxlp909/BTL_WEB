@@ -1,0 +1,49 @@
+@startuml uc_m6_danh_gia_bao_cao
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam actor {
+  BorderColor #2F5597
+}
+skinparam rectangle {
+  BackgroundColor #F5F8FC
+  BorderColor #8EA9DB
+}
+left to right direction
+
+title "Phân rã Use Case - Module 6: Quản lý đánh giá, khách hàng và báo cáo"
+
+actor "Customer\n(Khách hàng)" as Customer
+actor "Admin\n(Quản trị viên)" as Admin
+
+rectangle "Module 6: Quản lý đánh giá, khách hàng và báo cáo" {
+
+  usecase "Viết và sửa đánh giá sách" as UC_VIET
+
+  usecase "Xem danh sách đánh giá\n(lọc theo sách, trạng thái)" as UC_DS_DG
+  usecase "Ẩn / hiện đánh giá" as UC_AN
+
+  usecase "Xem danh sách khách hàng\n(tìm, lọc theo trạng thái)" as UC_DS_KH
+  usecase "Khóa tài khoản khách" as UC_KHOA
+  usecase "Mở khóa tài khoản khách" as UC_MO
+
+  usecase "Xem tổng quan hệ thống" as UC_TQ
+  usecase "Xem báo cáo doanh thu" as UC_BC
+}
+
+' --- Customer ---
+Customer --> UC_VIET
+
+' --- Admin ---
+Admin --> UC_DS_DG
+Admin --> UC_AN
+Admin --> UC_DS_KH
+Admin --> UC_KHOA
+Admin --> UC_MO
+Admin --> UC_TQ
+Admin --> UC_BC
+
+@enduml

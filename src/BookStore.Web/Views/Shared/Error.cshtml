@@ -1,0 +1,44 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = ViewText.T($"Lỗi {Model.StatusCode}", $"Error {Model.StatusCode}");
+}
+<section class="row justify-content-center py-4">
+    <div class="col-12 col-lg-8">
+        <div class="card bs-surface-card border-danger-subtle">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <span class="badge text-bg-danger fs-6">HTTP @Model.StatusCode</span>
+                    <code class="bs-error-code">@Model.Code</code>
+                </div>
+
+                <h1 class="h3 mb-3">
+                    @ViewText.T("Không thể hoàn tất yêu cầu", "Unable to Complete Request")
+                </h1>
+
+                <p class="lead bs-error-message mb-4">
+                    @Model.Message
+                </p>
+
+                <dl class="row small bg-light rounded p-3 mb-4 border">
+                    <dt class="col-sm-4 text-secondary">@ViewText.T("Mã trạng thái HTTP", "HTTP Status Code")</dt>
+                    <dd class="col-sm-8 mb-2">@Model.StatusCode</dd>
+
+                    <dt class="col-sm-4 text-secondary">@ViewText.T("Mã lỗi hệ thống", "Error Code")</dt>
+                    <dd class="col-sm-8 mb-2"><code>@Model.Code</code></dd>
+
+                    <dt class="col-sm-4 text-secondary">@ViewText.T("Mã tra cứu (TraceId)", "Reference ID (TraceId)")</dt>
+                    <dd class="col-sm-8 mb-0"><code id="error-trace-id">@Model.TraceId</code></dd>
+                </dl>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="/" class="btn bs-btn-primary">
+                        @ViewText.T("Về trang chủ", "Back to Home")
+                    </a>
+                    <a href="/sach" class="btn btn-outline-secondary">
+                        @ViewText.T("Xem danh mục sách", "Browse Catalog")
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,26 @@
+@startsalt wf_mobile_dang_nhap
+{
+  {+
+    { [Menu] | <b>BookStore</b> | [Giỏ hàng (0)] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Đăng nhập</b>
+    Thông báo lỗi (nếu có)
+    {
+      Tên đăng nhập | "              "
+      Mật khẩu | "              "
+    }
+    [] Ghi nhớ đăng nhập
+    [Đăng nhập]
+    { Chưa có tài khoản? | [Đăng ký] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <color:white>xxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

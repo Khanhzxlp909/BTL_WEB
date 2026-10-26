@@ -1,0 +1,39 @@
+@startsalt wf_kh_gio_hang
+{
+  {+
+    { <b>BookStore</b> | "Tìm sách..." | [Tìm] | ^VI^EN^ | [Giỏ hàng (0)] | [Tên người dùng] | [Đăng xuất] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    { [Trang chủ] | [Sách] | [Đơn hàng của tôi] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {
+    {+
+      <b>Giỏ hàng của bạn</b>
+      {
+      <b>Ảnh</b> | <b>Tên sách</b> | <b>Đơn giá</b> | <b>Số lượng</b> | <b>Thành tiền</b> | .
+      [ Ảnh bìa ] | Tên sách | Đơn giá | { [-] | "  1  " | [+] } | Thành tiền | [Xóa]
+      [ Ảnh bìa ] | Tên sách | Đơn giá | { [-] | "  1  " | [+] } | Thành tiền | [Xóa]
+    }
+      Cảnh báo giá hoặc tồn kho thay đổi (nếu có)
+      { [Làm trống giỏ hàng] | [Tiếp tục mua sắm] }
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      <b>Tóm tắt đơn</b>
+      Tạm tính
+      Phí giao hàng: 0đ
+      Tổng cộng
+      [Đặt hàng]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+  }
+  .
+  {+
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

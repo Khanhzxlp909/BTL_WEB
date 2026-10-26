@@ -1,0 +1,58 @@
+@startsalt wf_ad_tong_quan
+{
+  {+
+    { <b>BookStore - Quản trị</b> | ^VI^EN^ | [Tên Admin] | [Đăng xuất] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {
+    {+
+      <b>Menu quản trị</b>
+      [Tổng quan]
+      [Sách]
+      [Thể loại]
+      [Kho]
+      [Đơn hàng]
+      [Đánh giá]
+      [Khách hàng]
+      [Báo cáo]
+      [Chuyển sang cửa hàng]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      <b>Tổng quan hệ thống</b>
+      {
+      {+
+      Đơn đã giao
+      Số liệu
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      Đơn chờ xác nhận
+      Số liệu
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      Đơn bị hủy
+      Số liệu
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+    }
+      {
+      {+
+      Số sách
+      Số liệu
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    } | {+
+      Số khách hàng
+      Số liệu
+      <color:white>xxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+    }
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+  }
+  .
+  {+
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

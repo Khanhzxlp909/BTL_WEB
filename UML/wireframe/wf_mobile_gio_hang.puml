@@ -1,0 +1,46 @@
+@startsalt wf_mobile_gio_hang
+{
+  {+
+    { [Menu] | <b>BookStore</b> | [Giỏ hàng (0)] }
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Giỏ hàng của bạn</b>
+    {+
+      { [ Ảnh bìa ] | Tên sách }
+      Đơn giá
+      { [-] | "  1  " | [+] }
+      Thành tiền
+      [Xóa]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+    {+
+      { [ Ảnh bìa ] | Tên sách }
+      Đơn giá
+      { [-] | "  1  " | [+] }
+      Thành tiền
+      [Xóa]
+      <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+    }
+    Cảnh báo giá, tồn kho (nếu có)
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <b>Tóm tắt đơn</b>
+    Tạm tính
+    Phí giao hàng: 0đ
+    Tổng cộng
+    [Đặt hàng]
+    [Tiếp tục mua sắm]
+    [Làm trống giỏ hàng]
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+  .
+  {+
+    <color:white>xxxx</color>BookStore - Website quản lý và bán sách
+    <color:white>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</color>
+  }
+}
+@endsalt

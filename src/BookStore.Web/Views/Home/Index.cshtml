@@ -1,0 +1,161 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = ViewText.T("Trang chủ", "Home");
+}
+
+<section class="bs-hero-banner rounded-3 p-4 p-lg-5 mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-12 col-lg-8">
+            <p class="bs-kicker text-uppercase small fw-semibold mb-2">
+                @ViewText.T("Không gian tri thức chọn lọc", "Curated Reading Room")
+            </p>
+            <h1 class="display-6 fw-bold bs-serif-heading mb-3">
+                @ViewText.T("Khám phá kho sách học thuật, kỹ thuật và văn học chọn lọc", "Discover Curated Academic, Technical, and Literary Titles")
+            </h1>
+            <p class="lead mb-4 bs-hero-lead">
+                @ViewText.T(
+                    "Tra cứu nhanh theo tên sách, tác giả, mã SKU hoặc ISBN; lọc theo thể loại, khoảng giá và tình trạng tồn kho thực tế.",
+                    "Search by title, author, SKU, or ISBN; filter by category, integer VND price range, and real-time stock availability.")
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/sach" class="btn bs-btn-primary px-4">
+                    @ViewText.T("Khám phá danh mục sách", "Explore Book Catalog")
+                </a>
+                <a href="/sach?InStock=true" class="btn btn-outline-secondary px-3">
+                    @ViewText.T("Sách đang còn hàng", "In-Stock Titles")
+                </a>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="bs-hero-emblem p-4 rounded-3 border">
+                <div class="small text-uppercase fw-semibold text-secondary mb-2">
+                    @ViewText.T("Điểm nhấn nhà sách", "Bookstore Highlights")
+                </div>
+                <ul class="list-unstyled mb-0 small d-grid gap-2">
+                    <li class="d-flex justify-content-between border-bottom pb-2">
+                        <span>@ViewText.T("Tra cứu danh mục", "Catalog Search")</span>
+                        <strong>SKU / ISBN / Tác giả</strong>
+                    </li>
+                    <li class="d-flex justify-content-between border-bottom pb-2">
+                        <span>@ViewText.T("Đơn vị tiền tệ", "Currency Format")</span>
+                        <strong>VND (@ViewText.T("số nguyên", "integer"))</strong>
+                    </li>
+                    <li class="d-flex justify-content-between">
+                        <span>@ViewText.T("Múi giờ hiển thị", "Display Timezone")</span>
+                        <strong>UTC+7</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (!Model.IsDatabaseConfigured)
+{
+    <section class="card bs-surface-card border-warning mb-4" aria-labelledby="db-config-heading">
+        <div class="card-body p-4 p-lg-5">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <span class="badge text-bg-warning">
+                    @ViewText.T("Chưa cấu hình cơ sở dữ liệu", "Database Not Configured")
+                </span>
+                <code>ConnectionStrings__BookStore</code>
+            </div>
+            <h2 id="db-config-heading" class="h4 bs-serif-heading mb-3">
+                @ViewText.T(
+                    "Hướng dẫn cấu hình kết nối SQL Server cho BookStore",
+                    "How to Configure the SQL Server Connection for BookStore")
+            </h2>
+            <p class="mb-3">
+                @ViewText.T(
+                    "Hệ thống chưa nhận được chuỗi kết nối cơ sở dữ liệu hợp lệ. Để đảm bảo tính trung thực dữ liệu, trang chủ không hiển thị sách hay số liệu giả. Hãy cấu hình biến môi trường hoặc User Secrets theo một trong các cách sau:",
+                    "No valid database connection string is configured yet. To preserve data integrity, no placeholder books or synthetic metrics are shown. Configure the connection string using one of the following methods:")
+            </p>
+            <div class="bg-light border rounded p-3 mb-3">
+                <div class="small fw-semibold text-secondary mb-1">
+                    @ViewText.T("Cách 1: Biến môi trường (khuyến nghị)", "Option 1: Environment Variable (Recommended)")
+                </div>
+                <pre class="mb-0 small"><code>export ConnectionStrings__BookStore="Server=localhost,1433;Database=BookStoreDb;User Id=sa;Password=&lt;MatKhauManh&gt;;TrustServerCertificate=True;"</code></pre>
+            </div>
+            <div class="bg-light border rounded p-3">
+                <div class="small fw-semibold text-secondary mb-1">
+                    @ViewText.T("Cách 2: .NET User Secrets trong thư mục dự án", "Option 2: .NET User Secrets")
+                </div>
+                <pre class="mb-0 small"><code>dotnet user-secrets --project src/BookStore.Web set "ConnectionStrings:BookStore" "Server=localhost,1433;Database=BookStoreDb;Trusted_Connection=True;TrustServerCertificate=True;"</code></pre>
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <section class="mb-5" aria-labelledby="home-categories-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 id="home-categories-heading" class="h4 bs-serif-heading mb-0">
+                @ViewText.T("Thể loại sách", "Book Categories")
+            </h2>
+            <a href="/sach" class="btn btn-sm btn-outline-secondary">
+                @ViewText.T("Xem tất cả", "View all")
+            </a>
+        </div>
+
+        @if (Model.Categories.Count == 0)
+        {
+            <div class="card bs-surface-card">
+                <div class="card-body text-secondary">
+                    @ViewText.T("Chưa có thể loại sách nào đang hoạt động trong cơ sở dữ liệu.", "No active book categories are available in the database yet.")
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var category in Model.Categories)
+                {
+                    <a href="/sach?CategoryId=@category.Id" class="btn bs-category-pill">
+                        @category.Name
+                    </a>
+                }
+                <a href="/sach" class="btn btn-outline-secondary">
+                    @ViewText.T("Xem tất cả", "View all")
+                </a>
+            </div>
+        }
+    </section>
+
+    <section aria-labelledby="home-newbooks-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 id="home-newbooks-heading" class="h4 bs-serif-heading mb-0">
+                @ViewText.T("Sách mới nhất", "Newest Arrivals")
+            </h2>
+            <a href="/sach" class="btn btn-sm bs-btn-primary">
+                @ViewText.T("Xem thêm sách", "Browse more books")
+            </a>
+        </div>
+
+        @if (Model.NewBooks.Count == 0)
+        {
+            <div class="card bs-surface-card">
+                <div class="card-body p-4 text-center text-secondary">
+                    <p class="mb-2">@ViewText.T("Chưa có đầu sách nào trong danh mục hiện tại.", "No books are currently available in the catalog.")</p>
+                    <a href="/sach" class="btn btn-sm btn-outline-secondary">@ViewText.T("Mở trang danh mục sách", "Open catalog page")</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
+                @foreach (var book in Model.NewBooks)
+                {
+                    <div class="col">
+                        <partial name="_BookCard" model="book" />
+                    </div>
+                }
+            </div>
+
+            <div class="text-center">
+                <a href="/sach" class="btn btn-outline-secondary px-4">
+                    @ViewText.T("Xem thêm sách", "Browse all books")
+                </a>
+            </div>
+        }
+    </section>
+}

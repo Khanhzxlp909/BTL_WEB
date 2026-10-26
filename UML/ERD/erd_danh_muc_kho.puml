@@ -1,0 +1,127 @@
+@startuml erd_danh_muc_kho
+skinparam shadowing false
+skinparam linetype polyline
+hide circle
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam note {
+  BackgroundColor #FFF9E5
+  BorderColor #BF9000
+}
+
+title "ERD logic (1/2) - Tài khoản, danh mục, kho"
+
+entity "Users" as Users {
+  * Id : int <<PK>>
+  --
+  * UserName : nvarchar(50) <<UQ>>
+  * Email : nvarchar(254) <<UQ>>
+  * PasswordHash : nvarchar(max)
+  FullName : nvarchar(100)
+  PhoneNumber : varchar(20)
+  * IsActive : bit
+  LockReason : nvarchar(500)
+  LockedByUserId : int <<FK>>
+  LockedAt : datetime2
+  * CreatedAt : datetime2
+}
+
+entity "Roles" as Roles {
+  * Id : int <<PK>>
+  --
+  * Name : nvarchar(50) <<UQ>>
+}
+
+entity "UserRoles" as UserRoles {
+  * UserId : int <<PK, FK>>
+  * RoleId : int <<PK, FK>>
+}
+
+entity "Categories" as Categories {
+  * Id : int <<PK>>
+  --
+  * Name : nvarchar(100) <<UQ>>
+  Description : nvarchar(1000)
+  * IsDeleted : bit
+}
+
+entity "Books" as Books {
+  * Id : int <<PK>>
+  --
+  * CategoryId : int <<FK>>
+  * Title : nvarchar(255)
+  * Author : nvarchar(150)
+  Publisher : nvarchar(150)
+  ISBN : varchar(30)
+  * SKU : varchar(64) <<UQ>>
+  PublishedYear : int
+  * Price : decimal(18,0)
+  DiscountPrice : decimal(18,0)
+  Description : nvarchar(max)
+  CoverImage : nvarchar(500)
+  * IsDeleted : bit
+  * CreatedAt : datetime2
+  * UpdatedAt : datetime2
+}
+
+entity "Inventories" as Inventories {
+  * Id : int <<PK>>
+  --
+  * BookId : int <<FK, UQ>>
+  * Quantity : int
+  * ReservedQuantity : int
+  * RowVersion : rowversion
+}
+
+entity "InventoryTransactions" as InventoryTransactions {
+  * Id : int <<PK>>
+  --
+  * InventoryId : int <<FK>>
+  OrderId : int <<FK>>
+  * ActorUserId : int <<FK>>
+  * Type : varchar(30)
+  * QuantityDelta : int
+  * ReservedDelta : int
+  * QuantityBefore : int
+  * QuantityAfter : int
+  * ReservedBefore : int
+  * ReservedAfter : int
+  Reference : nvarchar(64)
+  Reason : nvarchar(500)
+  * CreatedAt : datetime2
+}
+
+entity "SystemSettings" as SystemSettings {
+  * Id : int <<PK>>
+  --
+  * SettingKey : varchar(50) <<UQ>>
+  * SettingValue : nvarchar(200)
+}
+
+Users ||--o{ UserRoles : "có"
+Roles ||--o{ UserRoles : "gán cho"
+Users |o--o{ Users : "khóa bởi"
+Categories ||--o{ Books : "chứa"
+Books ||--|| Inventories : "có tồn kho"
+Inventories ||--o{ InventoryTransactions : "ghi nhận"
+Users ||--o{ InventoryTransactions : "thực hiện"
+
+note right of InventoryTransactions
+  OrderId tham chiếu bảng Orders
+  (xem erd_don_hang). Rỗng khi
+  biến động là nhập kho.
+end note
+
+note bottom of SystemSettings
+  Lưu ngưỡng cảnh báo tồn thấp chung:
+  SettingKey = LowStockThreshold, giá trị ban đầu 5.
+end note
+
+note bottom of Users
+  Mức logic. Bảng thực tế do ASP.NET Core Identity sinh,
+  các cột kỹ thuật của Identity không đưa vào sơ đồ.
+end note
+
+@enduml

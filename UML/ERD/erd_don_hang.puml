@@ -1,0 +1,123 @@
+@startuml erd_don_hang
+skinparam shadowing false
+skinparam linetype polyline
+hide circle
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5597
+}
+skinparam note {
+  BackgroundColor #FFF9E5
+  BorderColor #BF9000
+}
+
+title "ERD logic (2/2) - Giỏ hàng, đơn hàng, đánh giá"
+
+entity "Users" as Users #F2F2F2 {
+  * Id : int <<PK>>
+}
+
+entity "Books" as Books #F2F2F2 {
+  * Id : int <<PK>>
+  --
+  Title : nvarchar(255)
+  SKU : varchar(64)
+  Price : decimal(18,0)
+}
+
+entity "Carts" as Carts {
+  * Id : int <<PK>>
+  --
+  * UserId : int <<FK, UQ>>
+  * UpdatedAt : datetime2
+}
+
+entity "CartItems" as CartItems {
+  * Id : int <<PK>>
+  --
+  * CartId : int <<FK>>
+  * BookId : int <<FK>>
+  * Quantity : int
+}
+
+entity "Orders" as Orders {
+  * Id : int <<PK>>
+  --
+  * UserId : int <<FK>>
+  * OrderCode : varchar(30) <<UQ>>
+  * Status : varchar(20)
+  * PaymentMethod : varchar(20)
+  * PaymentStatus : varchar(20)
+  * RecipientName : nvarchar(100)
+  * Phone : varchar(20)
+  * ShippingAddress : nvarchar(255)
+  Note : nvarchar(500)
+  * Subtotal : decimal(18,0)
+  * ShippingFee : decimal(18,0)
+  * TotalAmount : decimal(18,0)
+  * CreatedAt : datetime2
+  DeliveredAt : datetime2
+  CancelledAt : datetime2
+  * RowVersion : rowversion
+}
+
+entity "OrderItems" as OrderItems {
+  * Id : int <<PK>>
+  --
+  * OrderId : int <<FK>>
+  * BookId : int <<FK>>
+  * BookTitle : nvarchar(255)
+  * SKU : varchar(64)
+  * Quantity : int
+  * UnitPrice : decimal(18,0)
+  * LineTotal : decimal(18,0)
+}
+
+entity "OrderEvents" as OrderEvents {
+  * Id : int <<PK>>
+  --
+  * OrderId : int <<FK>>
+  * ActorUserId : int <<FK>>
+  FromStatus : varchar(20)
+  * ToStatus : varchar(20)
+  Note : nvarchar(500)
+  * CreatedAt : datetime2
+}
+
+entity "Reviews" as Reviews {
+  * Id : int <<PK>>
+  --
+  * UserId : int <<FK>>
+  * BookId : int <<FK>>
+  * Rating : int
+  * Comment : nvarchar(1000)
+  * IsHidden : bit
+  ModeratedByUserId : int <<FK>>
+  ModeratedAt : datetime2
+  * CreatedAt : datetime2
+  * UpdatedAt : datetime2
+}
+
+Users ||--o| Carts : "sở hữu"
+Carts ||--o{ CartItems : "gồm"
+Books ||--o{ CartItems : "được thêm vào"
+Users ||--o{ Orders : "đặt"
+Orders ||--o{ OrderItems : "gồm"
+Books ||--o{ OrderItems : "được bán trong"
+Orders ||--o{ OrderEvents : "có lịch sử"
+Users ||--o{ OrderEvents : "thực hiện"
+Users ||--o{ Reviews : "viết"
+Books ||--o{ Reviews : "được đánh giá"
+Users |o--o{ Reviews : "kiểm duyệt"
+
+note right of Users
+  Users và Books chỉ hiển thị khóa để nối quan hệ.
+  Chi tiết cột xem erd_danh_muc_kho.
+end note
+
+note bottom of OrderEvents
+  Lý do hủy đơn lưu ở Note của sự kiện chuyển sang CANCELLED.
+  Người hủy là ActorUserId của sự kiện đó.
+end note
+
+@enduml
