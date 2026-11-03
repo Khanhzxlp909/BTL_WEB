@@ -3,72 +3,65 @@
     ViewData["Title"] = ViewText.T("Đăng nhập", "Sign In");
 }
 
-<section class="row justify-content-center py-2">
-    <div class="col-12 col-md-8 col-lg-5">
-        <div class="card bs-surface-card">
-            <div class="card-body p-4 p-lg-5">
-                <h1 class="h3 bs-serif-heading mb-1">
-                    @ViewText.T("Đăng nhập", "Sign In")
-                </h1>
-                <p class="text-secondary small mb-4">
-                    @ViewText.T(
-                        "Đăng nhập vào tài khoản BookStore của bạn.",
-                        "Sign in to your BookStore account.")
-                </p>
+<section class="bs-auth-wrap">
+    <div class="card bs-surface-card">
+        <div class="card-body p-4">
+            <h1 class="h4 bs-serif-heading fw-bold mb-1">
+                @ViewText.T("Đăng nhập", "Sign In")
+            </h1>
+            <p class="text-secondary small mb-4">
+                @ViewText.T("Đăng nhập vào tài khoản BookStore của bạn.", "Sign in to your BookStore account.")
+            </p>
 
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="alert alert-danger small" role="alert"></div>
-                }
+            @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể đăng nhập. Vui lòng kiểm tra thông tin bên dưới:", "Sign-in failed. Please review the details below:"))
 
-                <form method="post" action="/tai-khoan/dang-nhap" asp-antiforgery="true" novalidate>
-                    <input type="hidden" asp-for="ReturnUrl" />
+            <form method="post" action="/tai-khoan/dang-nhap" asp-antiforgery="true" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
 
-                    <div class="mb-3">
-                        <label asp-for="UserName" class="form-label fw-semibold">
-                            @ViewText.T("Tên đăng nhập", "Username")
-                        </label>
-                        <input asp-for="UserName"
-                               class="form-control"
-                               maxlength="50"
-                               autocomplete="username" />
-                        <span asp-validation-for="UserName" class="text-danger small"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label fw-semibold">
+                        @ViewText.T("Tên đăng nhập", "Username")
+                    </label>
+                    <input asp-for="UserName"
+                           class="form-control"
+                           maxlength="50"
+                           autocomplete="username" />
+                    <span asp-validation-for="UserName" class="text-danger small"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-semibold">
-                            @ViewText.T("Mật khẩu", "Password")
-                        </label>
-                        <input asp-for="Password"
-                               type="password"
-                               value=""
-                               class="form-control"
-                               maxlength="64"
-                               autocomplete="current-password" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold">
+                        @ViewText.T("Mật khẩu", "Password")
+                    </label>
+                    <input asp-for="Password"
+                           type="password"
+                           value=""
+                           class="form-control"
+                           maxlength="64"
+                           autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
 
-                    <div class="form-check mb-4">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">
-                            @ViewText.T("Ghi nhớ đăng nhập", "Remember me")
-                        </label>
-                    </div>
+                <div class="form-check mb-4">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label small">
+                        @ViewText.T("Ghi nhớ đăng nhập trên thiết bị này", "Keep me signed in on this device")
+                    </label>
+                </div>
 
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn bs-btn-primary py-2">
-                            @ViewText.T("Đăng nhập", "Sign in")
-                        </button>
-                    </div>
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn bs-btn-primary py-2">
+                        @ViewText.T("Đăng nhập", "Sign in")
+                    </button>
+                </div>
 
-                    <div class="text-center small text-secondary">
-                        @ViewText.T("Chưa có tài khoản?", "Don't have an account?")
-                        <a href="/tai-khoan/dang-ky" class="fw-semibold text-decoration-none">
-                            @ViewText.T("Đăng ký", "Register")
-                        </a>
-                    </div>
-                </form>
-            </div>
+                <div class="text-center small text-secondary border-top pt-3">
+                    @ViewText.T("Chưa có tài khoản?", "Don't have an account?")
+                    <a href="/tai-khoan/dang-ky" class="fw-semibold text-decoration-none ms-1">
+                        @ViewText.T("Đăng ký ngay", "Create account")
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </section>

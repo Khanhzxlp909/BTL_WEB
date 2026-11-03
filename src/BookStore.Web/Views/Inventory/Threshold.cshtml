@@ -1,93 +1,57 @@
 @model ThresholdInput
 @{
-    ViewData["Title"] = ViewText.T("Cấu hình ngưỡng tồn kho thấp", "Low-Stock Threshold Configuration");
-    var errorCode = ViewData["ErrorCode"] as string;
-    var traceId = ViewData["TraceId"] as string;
+    Layout = "_AdminLayout";
+    ViewData["Title"] = ViewText.T("Ngưỡng cảnh báo tồn kho thấp", "Low-Stock Threshold");
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
+        &larr; @ViewText.T("Danh sách kho", "Back to Inventory")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h1 class="h3 bs-serif-heading mb-1">@ViewText.T("Ngưỡng cảnh báo tồn kho thấp", "Low-Stock Alert Threshold")</h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        "Thiết lập ngưỡng chung cho toàn hệ thống. Đầu sách có số lượng khả dụng (Tồn thực tế trừ Giữ chỗ) nhỏ hơn hoặc bằng ngưỡng này sẽ được đánh dấu cảnh báo.",
-                        "Configure the system-wide threshold. Books whose available quantity (Physical minus Reserved) is less than or equal to this value will trigger a low-stock alert.")
-                </p>
-            </div>
-            <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
-                @ViewText.T("Quay về danh sách kho", "Back to Inventory")
-            </a>
-        </div>
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể lưu ngưỡng tồn kho thấp. Vui lòng kiểm tra trường bên dưới:", "Unable to save low-stock threshold. Please review the field below:"))
 
-        @if (!ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode))
-        {
-            <div class="alert alert-danger" role="alert">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                    <strong>@ViewText.T("Không thể lưu ngưỡng tồn kho thấp. Vui lòng kiểm tra trường bên dưới:", "Unable to save low-stock threshold. Please review the field below:")</strong>
-                    @if (!string.IsNullOrWhiteSpace(errorCode))
-                    {
-                        <code class="bs-error-code">@errorCode</code>
-                    }
+<section class="card bs-surface-card">
+    <div class="card-body p-4">
+        <p class="small text-secondary mb-3">
+            @ViewText.T(
+                "Đầu sách có số lượng khả dụng (Tồn thực tế trừ Giữ chỗ) nhỏ hơn hoặc bằng ngưỡng này sẽ được đánh dấu cảnh báo tồn kho thấp.",
+                "Books whose available quantity (Physical minus Reserved) is less than or equal to this value will trigger a low-stock alert.")
+        </p>
+
+        <form method="post"
+              action="/admin/kho/nguong"
+              asp-antiforgery="true"
+              data-prevent-double-submit="true"
+              novalidate>
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-4">
+                    <label asp-for="Value" class="form-label fw-semibold">
+                        @ViewText.T("Ngưỡng tồn khả dụng thấp (>= 0)", "Low Available Stock Threshold (>= 0)") <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="Value"
+                           type="number"
+                           min="0"
+                           step="1"
+                           inputmode="numeric"
+                           class="form-control bs-tabular"
+                           required />
+                    <div class="form-text small">
+                        @ViewText.T("Nhập số nguyên không âm (từ 0 trở lên).", "Enter a non-negative integer (0 or greater).")
+                    </div>
+                    <span asp-validation-for="Value" class="text-danger small"></span>
                 </div>
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="small mb-0"></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(traceId))
-                {
-                    <div class="small text-secondary mt-2">
-                        @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
-                    </div>
-                }
             </div>
-        }
 
-        <section class="card bs-surface-card">
-            <div class="card-body p-4">
-                <form method="post"
-                      action="/admin/kho/nguong"
-                      asp-antiforgery="true"
-                      data-prevent-double-submit="true"
-                      novalidate>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-12 col-sm-6 col-md-5">
-                            <label asp-for="Value" class="form-label fw-semibold">
-                                @ViewText.T("Ngưỡng tồn khả dụng thấp (Value >= 0)", "Low Available Stock Threshold (Value >= 0)") <span class="text-danger">*</span>
-                            </label>
-                            <input asp-for="Value"
-                                   type="number"
-                                   min="0"
-                                   step="1"
-                                   inputmode="numeric"
-                                   class="form-control"
-                                   required />
-                            <div class="form-text small">
-                                @ViewText.T("Nhập số nguyên không âm (từ 0 trở lên).", "Enter a non-negative integer (0 or greater).")
-                            </div>
-                            <span asp-validation-for="Value" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3 mt-4">
-                        <a href="/admin/kho" class="btn btn-outline-secondary">
-                            @ViewText.T("Hủy", "Cancel")
-                        </a>
-                        <button type="submit" class="btn bs-btn-primary px-4">
-                            @ViewText.T("Lưu ngưỡng tồn thấp", "Save Threshold")
-                        </button>
-                    </div>
-                </form>
+            <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3 mt-4">
+                <a href="/admin/kho" class="btn btn-outline-secondary">
+                    @ViewText.T("Hủy", "Cancel")
+                </a>
+                <button type="submit" class="btn bs-btn-primary px-4">
+                    @ViewText.T("Lưu ngưỡng tồn thấp", "Save Threshold")
+                </button>
             </div>
-        </section>
+        </form>
     </div>
-</div>
-
-@section Scripts {
-    <script src="/js/admin.js"></script>
-}
+</section>

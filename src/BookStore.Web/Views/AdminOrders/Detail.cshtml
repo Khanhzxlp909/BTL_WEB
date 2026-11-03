@@ -1,18 +1,7 @@
 @model OrderDetailViewModel
 @{
-    ViewData["Title"] = ViewText.T($"Quản trị đơn {Model.Order.OrderCode}", $"Manage Order {Model.Order.OrderCode}");
+    Layout = "_AdminLayout";
+    ViewData["Title"] = ViewText.T($"Đơn hàng {Model.Order.OrderCode}", $"Order {Model.Order.OrderCode}");
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
-
-    <div class="col-12 col-lg-9">
-        @await Html.PartialAsync("_OrderDetailContent", Model)
-    </div>
-</div>
-
-@section Scripts {
-    <script src="/js/admin.js"></script>
-}
+@await Html.PartialAsync("_OrderDetailContent", Model)

@@ -19,39 +19,43 @@
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb small mb-0">
         <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@ViewText.T("Trang chủ", "Home")</a></li>
-        <li class="breadcrumb-item"><a href="/sach" class="text-decoration-none">@ViewText.T("Sách", "Books")</a></li>
-        <li class="breadcrumb-item text-truncate" aria-current="page">@book.Title</li>
+        <li class="breadcrumb-item"><a href="/sach" class="text-decoration-none">@ViewText.T("Danh mục sách", "Books")</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@book.Title</li>
     </ol>
 </nav>
 
 <section class="card bs-surface-card mb-4">
-    <div class="card-body p-4 p-lg-5">
+    <div class="card-body p-4">
         <div class="row g-4">
             <div class="col-12 col-md-5 col-lg-4">
                 @if (!string.IsNullOrWhiteSpace(book.CoverImage))
                 {
-                    <div class="bs-detail-cover-wrap border rounded-3 overflow-hidden">
-                        <img src="@book.CoverImage" alt="@book.Title" class="img-fluid w-100 bs-detail-cover-img" />
+                    <div class="bs-detail-cover-wrap">
+                        <img src="@book.CoverImage"
+                             alt="@book.Title"
+                             class="bs-detail-cover-img" />
                     </div>
                 }
                 else
                 {
-                    <div class="bs-book-cover-placeholder bs-detail-cover-placeholder rounded-3">
+                    <div class="bs-detail-cover-placeholder">
                         <span class="bs-book-cover-category">@book.CategoryName</span>
-                        <strong class="bs-book-cover-title fs-4">@book.Title</strong>
-                        <span class="bs-book-cover-author">@book.Author</span>
-                        <span class="bs-book-cover-sku">SKU: @book.SKU</span>
+                        <strong class="bs-serif-heading fs-4">@book.Title</strong>
+                        <div>
+                            <div class="small text-secondary">@book.Author</div>
+                            <div class="small text-muted mt-1">SKU: <code>@book.SKU</code></div>
+                        </div>
                     </div>
                 }
             </div>
 
-            <div class="col-12 col-md-7 col-lg-8 d-flex flex-column">
+            <div class="col-12 col-md-7 col-lg-8">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                     <span class="badge bs-badge-category">@book.CategoryName</span>
                     @if (inStock)
                     {
-                        <span class="badge bs-badge-instock">
-                            @ViewText.T($"Còn hàng ({book.AvailableQuantity} cuốn)", $"In stock ({book.AvailableQuantity} copies)")
+                        <span class="badge bs-badge-instock bs-tabular">
+                            @ViewText.T($"Còn {book.AvailableQuantity} bản", $"In stock ({book.AvailableQuantity})")
                         </span>
                     }
                     else
@@ -60,30 +64,40 @@
                             @ViewText.T("Tạm hết hàng", "Out of stock")
                         </span>
                     }
+                    @if (Model.ReviewCount > 0 && Model.AverageRating.HasValue)
+                    {
+                        <span class="badge bs-badge-rating bs-tabular">
+                            @Model.AverageRating.Value.ToString("0.0", CultureInfo.InvariantCulture) / 5 (@Model.ReviewCount @ViewText.T("đánh giá", "reviews"))
+                        </span>
+                    }
                 </div>
 
-                <h1 class="h2 bs-serif-heading mb-2">@book.Title</h1>
+                <h1 class="h3 bs-serif-heading fw-bold mb-1">@book.Title</h1>
                 <p class="text-secondary mb-3">
                     @ViewText.T("Tác giả:", "Author:") <strong class="text-dark">@book.Author</strong>
                 </p>
 
-                <div class="bs-detail-price-box rounded-3 p-3 mb-4">
-                    <div class="small text-secondary mb-1">@ViewText.T("Giá bán", "Selling Price")</div>
-                    <div class="d-flex align-items-baseline gap-3 flex-wrap">
-                        <span class="fs-3 fw-bold bs-price-current">@ViewText.FormatVnd(book.SellingPrice)</span>
+                <div class="bs-detail-price-box mb-3">
+                    <div class="d-flex align-items-baseline gap-3 flex-wrap bs-tabular">
+                        <span class="fs-3 fw-bold bs-price-current @(hasDiscount ? "bs-price-sale" : "")">
+                            @ViewText.FormatVnd(book.SellingPrice)
+                        </span>
                         @if (hasDiscount)
                         {
                             <del class="text-secondary">@ViewText.FormatVnd(book.Price)</del>
                         }
                     </div>
+                    <div class="small text-secondary mt-1">
+                        @ViewText.T("Miễn phí giao hàng toàn quốc · Thanh toán khi nhận hàng (COD)", "Free nationwide shipping · Cash on Delivery (COD)")
+                    </div>
                 </div>
 
-                <div class="p-3 rounded-3 border bg-light-subtle mb-4" data-book-id="@book.Id">
+                <div class="p-3 rounded-2 border bg-light mb-4" data-book-id="@book.Id">
                     @if (!inStock)
                     {
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <span class="small text-secondary">
-                                @ViewText.T("Đầu sách này hiện tạm hết tồn kho khả dụng.", "This title currently has no available stock.")
+                                @ViewText.T("Đầu sách này hiện tạm hết hàng.", "This title is currently out of stock.")
                             </span>
                             <button type="button" class="btn btn-sm btn-outline-secondary" data-book-id="@book.Id" disabled>
                                 @ViewText.T("Tạm hết hàng", "Out of stock")
@@ -98,38 +112,36 @@
                               data-cart-add-form="true"
                               data-book-id="@book.Id"
                               novalidate>
-                            <div class="d-flex flex-wrap align-items-end gap-2">
-                                <div>
-                                    <label for="detail-qty-@book.Id" class="form-label small fw-semibold mb-1">
-                                        @ViewText.T("Số lượng mua", "Quantity")
-                                    </label>
-                                    <div class="bs-qty-stepper">
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-secondary"
-                                                data-qty-step="-1"
-                                                aria-label="@ViewText.T("Giảm số lượng", "Decrease quantity")">&minus;</button>
-                                        <input id="detail-qty-@book.Id"
-                                               type="number"
-                                               name="quantity"
-                                               value="1"
-                                               min="1"
-                                               max="@book.AvailableQuantity"
-                                               step="1"
-                                               inputmode="numeric"
-                                               class="form-control form-control-sm bs-qty-input" />
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-secondary"
-                                                data-qty-step="1"
-                                                aria-label="@ViewText.T("Tăng số lượng", "Increase quantity")">+</button>
-                                    </div>
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <label for="detail-cart-qty" class="small fw-semibold mb-0">
+                                    @ViewText.T("Số lượng:", "Quantity:")
+                                </label>
+                                <div class="bs-qty-stepper">
+                                    <button type="button"
+                                            class="btn btn-sm"
+                                            data-qty-step="-1"
+                                            aria-label="@ViewText.T("Giảm số lượng", "Decrease quantity")">&minus;</button>
+                                    <input id="detail-cart-qty"
+                                           type="number"
+                                           name="quantity"
+                                           value="1"
+                                           min="1"
+                                           max="@book.AvailableQuantity"
+                                           step="1"
+                                           inputmode="numeric"
+                                           class="form-control form-control-sm bs-qty-input" />
+                                    <button type="button"
+                                            class="btn btn-sm"
+                                            data-qty-step="1"
+                                            aria-label="@ViewText.T("Tăng số lượng", "Increase quantity")">+</button>
                                 </div>
                                 <button type="submit"
-                                        class="btn btn-sm bs-btn-primary px-4 py-2"
+                                        class="btn bs-btn-primary px-4"
                                         data-book-id="@book.Id">
                                     @ViewText.T("Thêm vào giỏ hàng", "Add to Cart")
                                 </button>
-                                <a href="/gio-hang" class="btn btn-sm btn-outline-secondary py-2">
-                                    @ViewText.T("Đến giỏ hàng", "Go to Cart")
+                                <a href="/gio-hang" class="btn btn-outline-secondary btn-sm">
+                                    @ViewText.T("Xem giỏ hàng", "View Cart")
                                 </a>
                             </div>
                             <div data-cart-feedback="true" class="d-none"></div>
@@ -139,84 +151,77 @@
                     {
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <span class="small text-secondary">
-                                @ViewText.T("Đăng nhập để thêm sách vào giỏ và đặt hàng COD.", "Sign in to add this book to your cart and place a COD order.")
+                                @ViewText.T("Đăng nhập tài khoản để thêm sách vào giỏ và đặt hàng.", "Sign in to add this book to your cart and place an order.")
                             </span>
                             <a href="@loginToBuyUrl"
-                               class="btn btn-sm bs-btn-primary px-3"
+                               class="btn bs-btn-primary px-4"
                                data-book-id="@book.Id">
-                                @ViewText.T("Đăng nhập để thêm vào giỏ", "Sign in to add to cart")
+                                @ViewText.T("Đăng nhập để mua", "Sign in to buy")
                             </a>
                         </div>
                     }
                 </div>
 
-                <dl class="row small bs-meta-grid mb-4">
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Mã SKU", "SKU")</dt>
-                    <dd class="col-sm-8"><code>@book.SKU</code></dd>
-
-                    <dt class="col-sm-4 text-secondary">ISBN</dt>
-                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.ISBN) ? ViewText.T("Chưa cập nhật", "Not specified") : Model.ISBN)</dd>
-
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Nhà xuất bản", "Publisher")</dt>
-                    <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Publisher) ? ViewText.T("Chưa cập nhật", "Not specified") : Model.Publisher)</dd>
-
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Năm xuất bản", "Published Year")</dt>
-                    <dd class="col-sm-8">@(Model.PublishedYear?.ToString(CultureInfo.InvariantCulture) ?? ViewText.T("Chưa cập nhật", "Not specified"))</dd>
-
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Đánh giá trung bình", "Average Rating")</dt>
-                    <dd class="col-sm-8 mb-0">
-                        @if (Model.ReviewCount > 0 && Model.AverageRating.HasValue)
-                        {
-                            <strong>@Model.AverageRating.Value.ToString("0.0", CultureInfo.InvariantCulture) / 5</strong>
-                            <span class="text-secondary">
-                                (@Model.ReviewCount @ViewText.T("đánh giá", "reviews"))
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="text-secondary">@ViewText.T("Chưa có đánh giá", "No reviews yet")</span>
-                        }
-                    </dd>
-                </dl>
-
-                <div class="border-top pt-3 mt-auto">
-                    <h2 class="h6 fw-semibold mb-2">@ViewText.T("Mô tả nội dung", "Book Description")</h2>
-                    @if (string.IsNullOrWhiteSpace(Model.Description))
-                    {
-                        <p class="text-secondary mb-0">@ViewText.T("Chưa có mô tả chi tiết cho đầu sách này.", "No detailed description is available for this book yet.")</p>
-                    }
-                    else
-                    {
-                        <div class="bs-preline text-body">@Model.Description</div>
-                    }
-                </div>
+                <h2 class="h6 fw-bold mb-2">@ViewText.T("Thông tin xuất bản", "Book Specifications")</h2>
+                <table class="table table-sm table-bordered bs-spec-table small mb-0">
+                    <tbody>
+                        <tr>
+                            <th>SKU</th>
+                            <td><code>@book.SKU</code></td>
+                        </tr>
+                        <tr>
+                            <th>ISBN</th>
+                            <td>@(string.IsNullOrWhiteSpace(Model.ISBN) ? ViewText.T("Chưa cập nhật", "Not specified") : Model.ISBN)</td>
+                        </tr>
+                        <tr>
+                            <th>@ViewText.T("Nhà xuất bản", "Publisher")</th>
+                            <td>@(string.IsNullOrWhiteSpace(Model.Publisher) ? ViewText.T("Chưa cập nhật", "Not specified") : Model.Publisher)</td>
+                        </tr>
+                        <tr>
+                            <th>@ViewText.T("Năm xuất bản", "Published Year")</th>
+                            <td class="bs-tabular">@(Model.PublishedYear?.ToString(CultureInfo.InvariantCulture) ?? ViewText.T("Chưa cập nhật", "Not specified"))</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
+
+        <div class="border-top pt-4 mt-4">
+            <h2 class="h6 fw-bold mb-2">@ViewText.T("Giới thiệu nội dung", "Description")</h2>
+            @if (string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p class="text-secondary small mb-0">@ViewText.T("Chưa có mô tả chi tiết cho đầu sách này.", "No description available for this title yet.")</p>
+            }
+            else
+            {
+                <div class="bs-preline text-body">@Model.Description</div>
+            }
         </div>
     </div>
 </section>
 
 <section class="card bs-surface-card" aria-labelledby="book-reviews-heading">
-    <div class="card-body p-4 p-lg-5">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h2 id="book-reviews-heading" class="h4 bs-serif-heading mb-0">
-                @ViewText.T("Đánh giá từ độc giả", "Reader Reviews")
-            </h2>
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <span class="badge text-bg-light border">
-                    @Model.ReviewCount @ViewText.T("nhận xét", "reviews")
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pb-3 mb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <h2 id="book-reviews-heading" class="h5 bs-serif-heading fw-bold mb-0">
+                    @ViewText.T("Đánh giá từ độc giả", "Customer Reviews")
+                </h2>
+                <span class="badge bs-badge-category bs-tabular">
+                    @Model.ReviewCount
                 </span>
-                @if (isCustomerReviewer)
-                {
-                    <a href="/sach/@book.Id/danh-gia" class="btn btn-sm bs-btn-primary">
-                        @ViewText.T("Viết / sửa đánh giá", "Write / Edit Review")
-                    </a>
-                }
             </div>
+            @if (isCustomerReviewer)
+            {
+                <a href="/sach/@book.Id/danh-gia" class="btn btn-sm bs-btn-primary">
+                    @ViewText.T("Viết / sửa đánh giá", "Write / Edit Review")
+                </a>
+            }
         </div>
 
         @if (Model.Reviews.Count == 0)
         {
-            <p class="text-secondary mb-0">
+            <p class="text-secondary small mb-0">
                 @ViewText.T("Chưa có đánh giá nào được hiển thị cho đầu sách này.", "There are no public reviews for this book yet.")
             </p>
         }
@@ -225,19 +230,19 @@
             <div class="d-grid gap-3">
                 @foreach (var review in Model.Reviews)
                 {
-                    <article class="border rounded-3 p-3 bg-light-subtle">
-                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                    <article class="border rounded-2 p-3 bg-light">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
                             <div class="d-flex align-items-center gap-2">
                                 <strong>@review.UserName</strong>
-                                <span class="badge bs-badge-rating">
+                                <span class="badge bs-badge-rating bs-tabular">
                                     @review.Rating / 5
                                 </span>
                             </div>
-                            <time class="small text-secondary" datetime="@review.CreatedAt.ToString("O", CultureInfo.InvariantCulture)">
+                            <time class="small text-secondary bs-tabular" datetime="@review.CreatedAt.ToString("O", CultureInfo.InvariantCulture)">
                                 @ViewText.FormatVietnamTime(review.CreatedAt)
                             </time>
                         </div>
-                        <div class="bs-preline mb-0">@review.Comment</div>
+                        <div class="bs-preline small mb-0">@review.Comment</div>
                     </article>
                 }
             </div>

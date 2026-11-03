@@ -1,13 +1,12 @@
 @model AdminBookListViewModel
 @{
-    ViewData["Title"] = ViewText.T("Quản trị danh mục sách", "Book Catalog Management");
+    Layout = "_AdminLayout";
+    ViewData["Title"] = ViewText.T("Quản lý sách", "Books Management");
     var q = Model.Query;
     var status = string.IsNullOrWhiteSpace(Model.Status) ? "all" : Model.Status;
     var minPriceValue = q.MinPrice.HasValue ? decimal.Truncate(q.MinPrice.Value).ToString(CultureInfo.InvariantCulture) : "";
     var maxPriceValue = q.MaxPrice.HasValue ? decimal.Truncate(q.MaxPrice.Value).ToString(CultureInfo.InvariantCulture) : "";
     var presetPageSizes = new[] { 8, 12, 24, 48, 100 };
-    var errorCode = ViewData["ErrorCode"] as string;
-    var traceId = ViewData["TraceId"] as string;
 
     string BuildPageUrl(int targetPage)
     {
@@ -50,435 +49,386 @@
     }
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/the-loai" class="btn btn-sm btn-outline-secondary">
+        @ViewText.T("Thể loại", "Categories")
+    </a>
+    <a href="/admin/sach/them" class="btn btn-sm bs-btn-primary">
+        + @ViewText.T("Thêm sách mới", "Add Book")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h1 class="h3 bs-serif-heading mb-1">@ViewText.T("Quản trị danh mục sách", "Book Catalog Management")</h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        $"Tổng cộng {Model.Books.TotalItems} đầu sách theo bộ lọc hiện tại",
-                        $"Showing {Model.Books.TotalItems} books matching current filters")
-                </p>
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Bộ lọc hoặc yêu cầu chưa hợp lệ. Hãy kiểm tra chi tiết bên dưới:", "Invalid filter or request parameters. Please review the details below:"))
+
+<section class="bs-filter-card mb-4" aria-label="@ViewText.T("Bộ lọc sách quản trị", "Admin book filter form")">
+    <div class="p-3">
+        <form id="admin-book-filter-form"
+              method="get"
+              action="/admin/sach"
+              data-admin-filter-form="true"
+              class="row g-2 align-items-end">
+            <div class="col-12 col-md-4 col-xl-3">
+                <label for="admin-book-search" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Từ khóa", "Keyword")
+                </label>
+                <input id="admin-book-search"
+                       type="search"
+                       name="Search"
+                       value="@q.Search"
+                       maxlength="255"
+                       class="form-control form-control-sm"
+                       placeholder="@ViewText.T("Tên sách, tác giả, SKU, ISBN...", "Title, author, SKU, ISBN...")" />
+                <span class="text-danger small">@Html.ValidationMessage("Search")</span>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="/admin/the-loai" class="btn btn-sm btn-outline-secondary">
-                    @ViewText.T("Quản lý thể loại", "Manage Categories")
-                </a>
-                <a href="/admin/sach/them" class="btn btn-sm bs-btn-primary">
-                    @ViewText.T("Thêm sách mới", "Add New Book")
-                </a>
+
+            <div class="col-6 col-md-4 col-xl-2">
+                <label for="admin-book-category" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Thể loại", "Category")
+                </label>
+                <select id="admin-book-category" name="CategoryId" class="form-select form-select-sm" data-auto-submit="true">
+                    <option value="">@ViewText.T("Tất cả", "All")</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        if (q.CategoryId == category.Id)
+                        {
+                            <option value="@category.Id" selected>@category.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    }
+                </select>
+                <span class="text-danger small">@Html.ValidationMessage("CategoryId")</span>
             </div>
+
+            <div class="col-6 col-md-4 col-xl-2">
+                <label for="admin-book-status" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Trạng thái", "Status")
+                </label>
+                <select id="admin-book-status" name="Status" class="form-select form-select-sm" data-auto-submit="true">
+                    <option value="all" selected="@(status == "all" ? "selected" : null)">@ViewText.T("Tất cả", "All")</option>
+                    <option value="active" selected="@(status == "active" ? "selected" : null)">@ViewText.T("Đang bán", "Active")</option>
+                    <option value="deleted" selected="@(status == "deleted" ? "selected" : null)">@ViewText.T("Ngừng bán", "Stopped")</option>
+                </select>
+                <span class="text-danger small">@Html.ValidationMessage("Status")</span>
+            </div>
+
+            <div class="col-6 col-sm-4 col-xl-2">
+                <label for="admin-book-sort" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Sắp xếp", "Sort")
+                </label>
+                <select id="admin-book-sort" name="Sort" class="form-select form-select-sm" data-auto-submit="true">
+                    <option value="newest" selected="@(q.Sort == "newest" ? "selected" : null)">@ViewText.T("Mới nhất", "Newest")</option>
+                    <option value="price-asc" selected="@(q.Sort == "price-asc" ? "selected" : null)">@ViewText.T("Giá tăng dần", "Price: Low-High")</option>
+                    <option value="price-desc" selected="@(q.Sort == "price-desc" ? "selected" : null)">@ViewText.T("Giá giảm dần", "Price: High-Low")</option>
+                    <option value="title" selected="@(q.Sort == "title" ? "selected" : null)">@ViewText.T("Tên sách (A-Z)", "Title (A-Z)")</option>
+                </select>
+                <span class="text-danger small">@Html.ValidationMessage("Sort")</span>
+            </div>
+
+            <div class="col-6 col-sm-4 col-xl-1">
+                <label for="admin-book-min-price" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Giá từ", "Min")
+                </label>
+                <input id="admin-book-min-price"
+                       type="number"
+                       name="MinPrice"
+                       value="@minPriceValue"
+                       min="0"
+                       step="1"
+                       inputmode="numeric"
+                       class="form-control form-control-sm"
+                       placeholder="0" />
+                <span class="text-danger small">@Html.ValidationMessage("MinPrice")</span>
+            </div>
+
+            <div class="col-6 col-sm-4 col-xl-1">
+                <label for="admin-book-max-price" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Giá đến", "Max")
+                </label>
+                <input id="admin-book-max-price"
+                       type="number"
+                       name="MaxPrice"
+                       value="@maxPriceValue"
+                       min="0"
+                       step="1"
+                       inputmode="numeric"
+                       class="form-control form-control-sm"
+                       placeholder="500000" />
+                <span class="text-danger small">@Html.ValidationMessage("MaxPrice")</span>
+            </div>
+
+            <div class="col-6 col-sm-3 col-xl-1">
+                <label for="admin-book-pagesize" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Hiển thị", "Show")
+                </label>
+                <select id="admin-book-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
+                    @if (!presetPageSizes.Contains(q.PageSize))
+                    {
+                        <option value="@q.PageSize" selected>@q.PageSize</option>
+                    }
+                    @foreach (var size in presetPageSizes)
+                    {
+                        if (q.PageSize == size)
+                        {
+                            <option value="@size" selected>@size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    }
+                </select>
+                <span class="text-danger small">@Html.ValidationMessage("PageSize")</span>
+            </div>
+
+            <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2 pt-1">
+                <div class="form-check mb-0">
+                    <input id="admin-book-instock"
+                           class="form-check-input"
+                           type="checkbox"
+                           name="InStock"
+                           value="true"
+                           data-auto-submit="true"
+                           checked="@(q.InStock ? "checked" : null)" />
+                    <label for="admin-book-instock" class="form-check-label small fw-medium">
+                        @ViewText.T("Chỉ sách còn tồn khả dụng", "Available in stock only")
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sm bs-btn-primary px-3">
+                        @ViewText.T("Lọc", "Apply")
+                    </button>
+                    <a href="/admin/sach" class="btn btn-sm btn-outline-secondary">
+                        @ViewText.T("Đặt lại", "Reset")
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card bs-surface-card" aria-label="@ViewText.T("Bảng danh sách sách quản trị", "Admin books table")">
+    <div class="card-body p-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-3 border-bottom">
+            <h2 class="h6 fw-bold mb-0">@ViewText.T("Danh sách đầu sách", "Books")</h2>
+            <span class="badge bs-badge-category bs-tabular">
+                @Model.Books.TotalItems @ViewText.T("đầu sách", "books")
+            </span>
         </div>
 
-        @if (!ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode))
+        @if (Model.Books.Items.Count == 0)
         {
-            <div class="alert alert-danger" role="alert">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                    <strong>@ViewText.T("Bộ lọc hoặc yêu cầu chưa hợp lệ. Hãy kiểm tra chi tiết bên dưới:", "Invalid filter or request parameters. Please review the details below:")</strong>
-                    @if (!string.IsNullOrWhiteSpace(errorCode))
-                    {
-                        <code class="bs-error-code">@errorCode</code>
-                    }
+            <div class="p-4 p-lg-5 text-center">
+                <h3 class="h6 fw-bold mb-1">
+                    @ViewText.T("Không tìm thấy đầu sách phù hợp", "No matching books found")
+                </h3>
+                <p class="text-secondary small mb-3">
+                    @ViewText.T(
+                        "Hãy điều chỉnh điều kiện lọc hoặc thêm đầu sách mới vào hệ thống.",
+                        "Try adjusting your filters or adding a new book to the catalog.")
+                </p>
+                <div class="d-flex justify-content-center gap-2 flex-wrap">
+                    <a href="/admin/sach" class="btn btn-sm btn-outline-secondary">
+                        @ViewText.T("Xóa bộ lọc", "Clear Filters")
+                    </a>
+                    <a href="/admin/sach/them" class="btn btn-sm bs-btn-primary">
+                        @ViewText.T("Thêm sách mới", "Add New Book")
+                    </a>
                 </div>
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="small mb-0"></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(traceId))
-                {
-                    <div class="small text-secondary mt-2">
-                        @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
-                    </div>
-                }
             </div>
         }
-
-        <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Bộ lọc sách quản trị", "Admin book filter form")">
-            <div class="card-body p-3 p-lg-4">
-                <form id="admin-book-filter-form"
-                      method="get"
-                      action="/admin/sach"
-                      data-admin-filter-form="true"
-                      class="row g-3 align-items-end">
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <label for="admin-book-search" class="form-label small fw-semibold">
-                            @ViewText.T("Từ khóa (Tên, tác giả, SKU, ISBN)", "Keyword (Title, author, SKU, ISBN)")
-                        </label>
-                        <input id="admin-book-search"
-                               type="search"
-                               name="Search"
-                               value="@q.Search"
-                               maxlength="255"
-                               class="form-control form-control-sm"
-                               placeholder="@ViewText.T("Nhập tên sách, tác giả, SKU, ISBN...", "Enter title, author, SKU, ISBN...")" />
-                        <span class="text-danger small">@Html.ValidationMessage("Search")</span>
-                    </div>
-
-                    <div class="col-6 col-md-3 col-lg-3">
-                        <label for="admin-book-category" class="form-label small fw-semibold">
-                            @ViewText.T("Thể loại", "Category")
-                        </label>
-                        <select id="admin-book-category" name="CategoryId" class="form-select form-select-sm" data-auto-submit="true">
-                            <option value="">@ViewText.T("Tất cả thể loại", "All categories")</option>
-                            @foreach (var category in Model.Categories)
-                            {
-                                if (q.CategoryId == category.Id)
-                                {
-                                    <option value="@category.Id" selected>@category.Name</option>
-                                }
-                                else
-                                {
-                                    <option value="@category.Id">@category.Name</option>
-                                }
-                            }
-                        </select>
-                        <span class="text-danger small">@Html.ValidationMessage("CategoryId")</span>
-                    </div>
-
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label for="admin-book-status" class="form-label small fw-semibold">
-                            @ViewText.T("Trạng thái bán", "Sale Status")
-                        </label>
-                        <select id="admin-book-status" name="Status" class="form-select form-select-sm" data-auto-submit="true">
-                            <option value="all" selected="@(status == "all" ? "selected" : null)">
-                                @ViewText.T("Tất cả", "All")
-                            </option>
-                            <option value="active" selected="@(status == "active" ? "selected" : null)">
-                                @ViewText.T("Đang bán", "Active")
-                            </option>
-                            <option value="deleted" selected="@(status == "deleted" ? "selected" : null)">
-                                @ViewText.T("Ngừng bán", "Stopped")
-                            </option>
-                        </select>
-                        <span class="text-danger small">@Html.ValidationMessage("Status")</span>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-lg-3">
-                        <label for="admin-book-sort" class="form-label small fw-semibold">
-                            @ViewText.T("Sắp xếp", "Sort by")
-                        </label>
-                        <select id="admin-book-sort" name="Sort" class="form-select form-select-sm" data-auto-submit="true">
-                            <option value="newest" selected="@(q.Sort == "newest" ? "selected" : null)">
-                                @ViewText.T("Mới nhất", "Newest")
-                            </option>
-                            <option value="price-asc" selected="@(q.Sort == "price-asc" ? "selected" : null)">
-                                @ViewText.T("Giá tăng dần", "Price: Low to High")
-                            </option>
-                            <option value="price-desc" selected="@(q.Sort == "price-desc" ? "selected" : null)">
-                                @ViewText.T("Giá giảm dần", "Price: High to Low")
-                            </option>
-                            <option value="title" selected="@(q.Sort == "title" ? "selected" : null)">
-                                @ViewText.T("Theo tên sách (A-Z)", "Title (A-Z)")
-                            </option>
-                        </select>
-                        <span class="text-danger small">@Html.ValidationMessage("Sort")</span>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-lg-2">
-                        <label for="admin-book-min-price" class="form-label small fw-semibold">
-                            @ViewText.T("Giá từ (VND)", "Min price")
-                        </label>
-                        <input id="admin-book-min-price"
-                               type="number"
-                               name="MinPrice"
-                               value="@minPriceValue"
-                               min="0"
-                               step="1"
-                               inputmode="numeric"
-                               class="form-control form-control-sm"
-                               placeholder="0" />
-                        <span class="text-danger small">@Html.ValidationMessage("MinPrice")</span>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-lg-2">
-                        <label for="admin-book-max-price" class="form-label small fw-semibold">
-                            @ViewText.T("Giá đến (VND)", "Max price")
-                        </label>
-                        <input id="admin-book-max-price"
-                               type="number"
-                               name="MaxPrice"
-                               value="@maxPriceValue"
-                               min="0"
-                               step="1"
-                               inputmode="numeric"
-                               class="form-control form-control-sm"
-                               placeholder="500000" />
-                        <span class="text-danger small">@Html.ValidationMessage("MaxPrice")</span>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-lg-2">
-                        <label for="admin-book-pagesize" class="form-label small fw-semibold">
-                            @ViewText.T("Số dòng/trang", "Per page")
-                        </label>
-                        <select id="admin-book-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
-                            @if (!presetPageSizes.Contains(q.PageSize))
-                            {
-                                <option value="@q.PageSize" selected>@q.PageSize</option>
-                            }
-                            @foreach (var size in presetPageSizes)
-                            {
-                                if (q.PageSize == size)
-                                {
-                                    <option value="@size" selected>@size</option>
-                                }
-                                else
-                                {
-                                    <option value="@size">@size</option>
-                                }
-                            }
-                        </select>
-                        <span class="text-danger small">@Html.ValidationMessage("PageSize")</span>
-                    </div>
-
-                    <div class="col-6 col-sm-4 col-lg-3">
-                        <div class="form-check pb-1">
-                            <input id="admin-book-instock"
-                                   class="form-check-input"
-                                   type="checkbox"
-                                   name="InStock"
-                                   value="true"
-                                   data-auto-submit="true"
-                                   checked="@(q.InStock ? "checked" : null)" />
-                            <label for="admin-book-instock" class="form-check-label small fw-medium">
-                                @ViewText.T("Chỉ sách còn tồn khả dụng", "Available in stock only")
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-4 col-lg-3 ms-lg-auto d-flex gap-2 justify-content-lg-end">
-                        <button type="submit" class="btn btn-sm bs-btn-primary px-3">
-                            @ViewText.T("Lọc sách", "Apply")
-                        </button>
-                        <a href="/admin/sach" class="btn btn-sm btn-outline-secondary">
-                            @ViewText.T("Đặt lại", "Reset")
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <section class="card bs-surface-card" aria-label="@ViewText.T("Bảng danh sách sách quản trị", "Admin books table")">
-            <div class="card-body p-0">
-                @if (Model.Books.Items.Count == 0)
-                {
-                    <div class="p-4 p-lg-5 text-center">
-                        <h2 class="h5 bs-serif-heading mb-2">
-                            @ViewText.T("Không tìm thấy đầu sách phù hợp", "No matching books found")
-                        </h2>
-                        <p class="text-secondary small mb-3">
-                            @ViewText.T(
-                                "Hãy thử điều chỉnh điều kiện lọc hoặc thêm đầu sách mới vào hệ thống.",
-                                "Try adjusting your filters or adding a new book to the catalog.")
-                        </p>
-                        <div class="d-flex justify-content-center gap-2 flex-wrap">
-                            <a href="/admin/sach" class="btn btn-sm btn-outline-secondary">
-                                @ViewText.T("Xóa bộ lọc", "Clear Filters")
-                            </a>
-                            <a href="/admin/sach/them" class="btn btn-sm bs-btn-primary">
-                                @ViewText.T("Thêm sách mới", "Add New Book")
-                            </a>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="bs-admin-table-wrap">
-                        <table class="table table-hover bs-admin-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>@ViewText.T("Sách", "Book")</th>
-                                    <th>@ViewText.T("Mã SKU & Thể loại", "SKU & Category")</th>
-                                    <th class="text-end">@ViewText.T("Giá bán", "Price")</th>
-                                    <th class="text-end">@ViewText.T("Tồn / Giữ / Khả dụng", "Stock / Res. / Avail.")</th>
-                                    <th class="text-center">@ViewText.T("Trạng thái", "Status")</th>
-                                    <th class="text-end">@ViewText.T("Thao tác", "Actions")</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var book in Model.Books.Items)
-                                {
-                                    var available = book.Quantity - book.ReservedQuantity;
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                @if (!string.IsNullOrWhiteSpace(book.CoverImage))
-                                                {
-                                                    <img src="@book.CoverImage"
-                                                         alt="@book.Title"
-                                                         class="bs-admin-thumb flex-shrink-0"
-                                                         loading="lazy" />
-                                                }
-                                                else
-                                                {
-                                                    <div class="bs-admin-thumb-placeholder flex-shrink-0" aria-hidden="true">
-                                                        <span>@book.SKU</span>
-                                                    </div>
-                                                }
-                                                <div>
-                                                    <div class="fw-semibold">
-                                                        @if (!book.IsDeleted)
-                                                        {
-                                                            <a href="/sach/@book.Id" class="text-decoration-none text-dark">@book.Title</a>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span>@book.Title</span>
-                                                        }
-                                                    </div>
-                                                    <div class="small text-secondary">
-                                                        @book.Author &middot; <span class="text-muted">#@book.Id</span>
-                                                    </div>
-                                                </div>
+        else
+        {
+            <div class="bs-admin-table-wrap">
+                <table class="table table-hover bs-admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>@ViewText.T("Sách", "Book")</th>
+                            <th>@ViewText.T("SKU & Thể loại", "SKU & Category")</th>
+                            <th class="text-end">@ViewText.T("Giá bán", "Price")</th>
+                            <th class="text-end">@ViewText.T("Tồn / Giữ / Khả dụng", "Stock / Res. / Avail.")</th>
+                            <th class="text-center">@ViewText.T("Trạng thái", "Status")</th>
+                            <th class="text-end">@ViewText.T("Thao tác", "Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var book in Model.Books.Items)
+                        {
+                            var available = book.Quantity - book.ReservedQuantity;
+                            var restoreConfirmMsg = ViewText.T(
+                                $"Xác nhận khôi phục mở bán lại sách “{book.Title}” (#{book.Id})?",
+                                $"Confirm restoring book “{book.Title}” (#{book.Id}) to active sale?");
+                            var stopConfirmMsg = ViewText.T(
+                                $"Xác nhận ngừng bán (xóa mềm) sách “{book.Title}” (#{book.Id})? Sách sẽ ẩn khỏi danh mục công khai nhưng vẫn giữ nguyên dữ liệu lịch sử.",
+                                $"Confirm stopping sale (soft-delete) for book “{book.Title}” (#{book.Id})? It will be hidden from the public catalog while preserving historical records.");
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if (!string.IsNullOrWhiteSpace(book.CoverImage))
+                                        {
+                                            <img src="@book.CoverImage"
+                                                 alt="@book.Title"
+                                                 class="bs-admin-thumb flex-shrink-0"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="bs-admin-thumb-placeholder flex-shrink-0" aria-hidden="true">
+                                                <span>@book.SKU</span>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <div><code>@book.SKU</code></div>
-                                            <div class="small text-secondary">@book.CategoryName</div>
-                                        </td>
-                                        <td class="text-end text-nowrap">
-                                            @if (book.DiscountPrice.HasValue && book.DiscountPrice.Value < book.Price)
-                                            {
-                                                <div class="bs-price-current">@ViewText.FormatVnd(book.DiscountPrice.Value)</div>
-                                                <div class="bs-price-original text-decoration-line-through">@ViewText.FormatVnd(book.Price)</div>
-                                            }
-                                            else
-                                            {
-                                                <div class="bs-price-current">@ViewText.FormatVnd(book.Price)</div>
-                                            }
-                                        </td>
-                                        <td class="text-end text-nowrap">
+                                        }
+                                        <div>
                                             <div class="fw-semibold">
-                                                @book.Quantity / @book.ReservedQuantity /
-                                                <span class="@(available > 0 ? "text-success" : "text-danger")">@available</span>
-                                            </div>
-                                            <div class="small text-secondary">
-                                                <a href="/admin/kho/@book.Id/nhap" class="text-decoration-none">@ViewText.T("Nhập kho", "Import")</a>
-                                                &middot;
-                                                <a href="/admin/kho/@book.Id/lich-su" class="text-decoration-none">@ViewText.T("Lịch sử", "History")</a>
-                                            </div>
-                                        </td>
-                                        <td class="text-center text-nowrap">
-                                            @if (book.IsDeleted)
-                                            {
-                                                <span class="badge bs-badge-deleted">
-                                                    @ViewText.T("Ngừng bán", "Stopped")
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bs-badge-instock">
-                                                    @ViewText.T("Đang bán", "Active")
-                                                </span>
-                                            }
-                                        </td>
-                                        <td class="text-end text-nowrap">
-                                            <div class="d-inline-flex flex-wrap justify-content-end gap-1">
-                                                <a href="/admin/sach/@book.Id/sua" class="btn btn-sm btn-outline-secondary">
-                                                    @ViewText.T("Sửa", "Edit")
-                                                </a>
                                                 @if (!book.IsDeleted)
                                                 {
-                                                    <form method="post"
-                                                          action="/admin/sach/@book.Id/ngung-ban"
-                                                          asp-antiforgery="true"
-                                                          class="d-inline"
-                                                          data-confirm="@ViewText.T($"Xác nhận ngừng bán sách \"{book.Title}\" ({book.SKU})? Sách sẽ ẩn khỏi danh mục công khai nhưng vẫn giữ nguyên tồn kho và lịch sử.", $"Confirm stopping sale for \"{book.Title}\" ({book.SKU})? The book will be hidden from the public catalog while preserving stock and history.")"
-                                                          data-prevent-double-submit="true">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                            @ViewText.T("Ngừng bán", "Stop Sale")
-                                                        </button>
-                                                    </form>
+                                                    <a href="/sach/@book.Id" class="text-decoration-none text-dark">@book.Title</a>
                                                 }
                                                 else
                                                 {
-                                                    <form method="post"
-                                                          action="/admin/sach/@book.Id/khoi-phuc"
-                                                          asp-antiforgery="true"
-                                                          class="d-inline"
-                                                          data-confirm="@ViewText.T($"Xác nhận khôi phục bán lại sách \"{book.Title}\" ({book.SKU})?", $"Confirm restoring \"{book.Title}\" ({book.SKU}) for sale?")"
-                                                          data-prevent-double-submit="true">
-                                                        <button type="submit" class="btn btn-sm btn-outline-success">
-                                                            @ViewText.T("Khôi phục", "Restore")
-                                                        </button>
-                                                    </form>
+                                                    <span>@book.Title</span>
                                                 }
                                             </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
+                                            <div class="small text-secondary">
+                                                @book.Author &middot; <span class="text-muted bs-tabular">#@book.Id</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div><code>@book.SKU</code></div>
+                                    <div class="small text-secondary">@book.CategoryName</div>
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    @if (book.DiscountPrice.HasValue && book.DiscountPrice.Value < book.Price)
+                                    {
+                                        <div class="bs-price-current bs-price-sale">@ViewText.FormatVnd(book.DiscountPrice.Value)</div>
+                                        <del class="bs-price-original">@ViewText.FormatVnd(book.Price)</del>
+                                    }
+                                    else
+                                    {
+                                        <div class="bs-price-current">@ViewText.FormatVnd(book.Price)</div>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap bs-tabular">
+                                    <span title="@ViewText.T("Tồn thực tế", "Physical")">@book.Quantity</span>
+                                    <span class="text-muted">/</span>
+                                    <span class="text-secondary" title="@ViewText.T("Đang giữ chỗ", "Reserved")">@book.ReservedQuantity</span>
+                                    <span class="text-muted">/</span>
+                                    <strong class="@(available > 0 ? "text-success" : "text-danger")" title="@ViewText.T("Khả dụng", "Available")">@available</strong>
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    @if (book.IsDeleted)
+                                    {
+                                        <span class="badge bs-badge-deleted">
+                                            @ViewText.T("Ngừng bán", "Stopped")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bs-badge-instock">
+                                            @ViewText.T("Đang bán", "Active")
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                        <a href="/admin/sach/@book.Id/sua" class="btn btn-sm btn-outline-secondary">
+                                            @ViewText.T("Sửa", "Edit")
+                                        </a>
+                                        <a href="/admin/kho/@book.Id/nhap" class="btn btn-sm btn-outline-secondary">
+                                            @ViewText.T("Nhập kho", "Import")
+                                        </a>
+                                        @if (book.IsDeleted)
+                                        {
+                                            <form method="post"
+                                                  action="/admin/sach/@book.Id/khoi-phuc"
+                                                  asp-antiforgery="true"
+                                                  class="d-inline"
+                                                  data-confirm="@restoreConfirmMsg"
+                                                  data-prevent-double-submit="true">
+                                                <button type="submit" class="btn btn-sm bs-btn-primary">
+                                                    @ViewText.T("Khôi phục", "Restore")
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post"
+                                                  action="/admin/sach/@book.Id/ngung-ban"
+                                                  asp-antiforgery="true"
+                                                  class="d-inline"
+                                                  data-confirm="@stopConfirmMsg"
+                                                  data-prevent-double-submit="true">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    @ViewText.T("Ngừng bán", "Stop Sale")
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
-        </section>
-
-        @if (Model.Books.TotalPages > 1)
-        {
-            var currentPage = Model.Books.Page;
-            var totalPages = Model.Books.TotalPages;
-            var startPage = Math.Max(1, currentPage - 2);
-            var endPage = Math.Min(totalPages, currentPage + 2);
-
-            <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh sách sách quản trị", "Admin books pagination")">
-                <ul class="pagination justify-content-center flex-wrap mb-0">
-                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
-                           tabindex="@(currentPage <= 1 ? "-1" : null)"
-                           aria-disabled="@(currentPage <= 1 ? "true" : null)">
-                            @ViewText.T("Trước", "Previous")
-                        </a>
-                    </li>
-
-                    @if (startPage > 1)
-                    {
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                        </li>
-                        @if (startPage > 2)
-                        {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                        }
-                    }
-
-                    @for (var p = startPage; p <= endPage; p++)
-                    {
-                        <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
-                            <a class="page-link" href="@BuildPageUrl(p)">@p</a>
-                        </li>
-                    }
-
-                    @if (endPage < totalPages)
-                    {
-                        @if (endPage < totalPages - 1)
-                        {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                        }
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a>
-                        </li>
-                    }
-
-                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
-                           tabindex="@(currentPage >= totalPages ? "-1" : null)"
-                           aria-disabled="@(currentPage >= totalPages ? "true" : null)">
-                            @ViewText.T("Tiếp", "Next")
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         }
     </div>
-</div>
+</section>
 
-@section Scripts {
-    <script src="/js/admin.js"></script>
+@if (Model.Books.TotalPages > 1)
+{
+    var currentPage = Model.Books.Page;
+    var totalPages = Model.Books.TotalPages;
+    var startPage = Math.Max(1, currentPage - 2);
+    var endPage = Math.Min(totalPages, currentPage + 2);
+
+    <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh sách sách quản trị", "Admin books pagination")">
+        <ul class="pagination justify-content-center flex-wrap mb-0">
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
+                   tabindex="@(currentPage <= 1 ? "-1" : null)"
+                   aria-disabled="@(currentPage <= 1 ? "true" : null)">
+                    @ViewText.T("Trước", "Previous")
+                </a>
+            </li>
+
+            @if (startPage > 1)
+            {
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
+                @if (startPage > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+            }
+
+            @for (var p = startPage; p <= endPage; p++)
+            {
+                <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
+                    <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                </li>
+            }
+
+            @if (endPage < totalPages)
+            {
+                @if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
+            }
+
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
+                   tabindex="@(currentPage >= totalPages ? "-1" : null)"
+                   aria-disabled="@(currentPage >= totalPages ? "true" : null)">
+                    @ViewText.T("Tiếp", "Next")
+                </a>
+            </li>
+        </ul>
+    </nav>
 }

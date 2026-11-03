@@ -55,8 +55,9 @@ public sealed class AccountController(UserManager<ApplicationUser> users, SignIn
         if (!ModelState.IsValid) return InvalidForm(model);
         readiness.EnsureConfigured();
         var result = await signIn.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, lockoutOnFailure: true);
-        // NotAllowed chỉ xảy ra sau khi mật khẩu đã đúng (CanSignInAsync); báo khóa không lộ tồn tại tài khoản với người không biết mật khẩu.
-        if (result.IsNotAllowed)
+        // Identity kiểm tra CanSignIn trước mật khẩu: chỉ tiết lộ khóa sau khi xác minh mật khẩu.
+        var blockedUser = result.IsNotAllowed ? await users.FindByNameAsync(model.UserName) : null;
+        if (blockedUser is { IsActive: false } && await users.CheckPasswordAsync(blockedUser, model.Password))
         {
             ModelState.AddModelError("", ValidationText.Pick(
                 "Tài khoản đã bị quản trị viên khóa nên không thể đăng nhập. Liên hệ quản trị viên nhà sách để được xem xét mở khóa.",

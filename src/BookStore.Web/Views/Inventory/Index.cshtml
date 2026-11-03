@@ -1,10 +1,9 @@
 @model InventoryListViewModel
 @{
-    ViewData["Title"] = ViewText.T("Quản trị tồn kho", "Inventory Management");
+    Layout = "_AdminLayout";
+    ViewData["Title"] = ViewText.T("Quản lý tồn kho", "Inventory Management");
     var q = Model.Query;
     var presetPageSizes = new[] { 8, 12, 24, 48, 100 };
-    var errorCode = ViewData["ErrorCode"] as string;
-    var traceId = ViewData["TraceId"] as string;
 
     string BuildPageUrl(int targetPage)
     {
@@ -27,283 +26,240 @@
     }
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/kho/nguong" class="btn btn-sm bs-btn-primary">
+        @ViewText.T($"Ngưỡng tồn thấp ({Model.LowStockThreshold})", $"Threshold ({Model.LowStockThreshold})")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h1 class="h3 bs-serif-heading mb-1">@ViewText.T("Quản trị tồn kho", "Inventory Management")</h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        $"Tổng cộng {Model.Inventories.TotalItems} đầu sách. Ngưỡng cảnh báo tồn khả dụng thấp hiện tại: <= {Model.LowStockThreshold}",
-                        $"Showing {Model.Inventories.TotalItems} books. Current low available stock threshold: <= {Model.LowStockThreshold}")
-                </p>
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Bộ lọc tồn kho chưa hợp lệ. Vui lòng kiểm tra các trường bên dưới:", "Invalid inventory filter parameters. Please review the fields below:"))
+
+<section class="bs-filter-card mb-4" aria-label="@ViewText.T("Bộ lọc danh sách tồn kho", "Inventory filter form")">
+    <div class="p-3">
+        <form id="admin-inventory-filter-form"
+              method="get"
+              action="/admin/kho"
+              data-admin-filter-form="true"
+              class="row g-2 align-items-end">
+            <div class="col-12 col-md-5">
+                <label for="admin-inventory-search" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Tìm theo tên sách hoặc mã SKU", "Search by book title or SKU")
+                </label>
+                <input id="admin-inventory-search"
+                       type="search"
+                       name="Search"
+                       value="@q.Search"
+                       maxlength="255"
+                       class="form-control form-control-sm"
+                       placeholder="@ViewText.T("Nhập tên sách hoặc mã SKU...", "Enter book title or SKU...")" />
+                <span class="text-danger small">@Html.ValidationMessage("Search")</span>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="/admin/kho/nguong" class="btn btn-sm bs-btn-primary">
-                    @ViewText.T($"Đặt ngưỡng tồn thấp (hiện tại: {Model.LowStockThreshold})", $"Set Low-Stock Threshold (current: {Model.LowStockThreshold})")
+
+            <div class="col-6 col-md-2">
+                <label for="admin-inventory-pagesize" class="form-label small fw-semibold mb-1">
+                    @ViewText.T("Số dòng/trang", "Per page")
+                </label>
+                <select id="admin-inventory-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
+                    @if (!presetPageSizes.Contains(q.PageSize))
+                    {
+                        <option value="@q.PageSize" selected>@q.PageSize</option>
+                    }
+                    @foreach (var size in presetPageSizes)
+                    {
+                        if (q.PageSize == size)
+                        {
+                            <option value="@size" selected>@size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    }
+                </select>
+                <span class="text-danger small">@Html.ValidationMessage("PageSize")</span>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="form-check pb-1">
+                    <input id="admin-inventory-lowstock"
+                           class="form-check-input"
+                           type="checkbox"
+                           name="LowStockOnly"
+                           value="true"
+                           data-auto-submit="true"
+                           checked="@(q.LowStockOnly ? "checked" : null)" />
+                    <label for="admin-inventory-lowstock" class="form-check-label small fw-medium">
+                        @ViewText.T($"Chỉ sách tồn thấp (<= {Model.LowStockThreshold})", $"Low stock only (<= {Model.LowStockThreshold})")
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-2 d-flex gap-2 justify-content-md-end">
+                <button type="submit" class="btn btn-sm bs-btn-primary px-3">
+                    @ViewText.T("Lọc", "Apply")
+                </button>
+                <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
+                    @ViewText.T("Đặt lại", "Reset")
                 </a>
             </div>
+        </form>
+    </div>
+</section>
+
+<section class="card bs-surface-card" aria-label="@ViewText.T("Bảng danh sách tồn kho", "Inventory table")">
+    <div class="card-body p-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-3 border-bottom">
+            <h2 class="h6 fw-bold mb-0">@ViewText.T("Tồn kho sách", "Inventory")</h2>
+            <span class="badge bs-badge-category bs-tabular">
+                @Model.Inventories.TotalItems @ViewText.T("đầu sách", "books")
+            </span>
         </div>
 
-        @if (!ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode))
+        @if (Model.Inventories.Items.Count == 0)
         {
-            <div class="alert alert-danger" role="alert">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                    <strong>@ViewText.T("Tham số lọc kho chưa hợp lệ. Hãy kiểm tra chi tiết bên dưới:", "Invalid inventory filter parameters. Please review the details below:")</strong>
-                    @if (!string.IsNullOrWhiteSpace(errorCode))
-                    {
-                        <code class="bs-error-code">@errorCode</code>
-                    }
-                </div>
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="small mb-0"></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(traceId))
-                {
-                    <div class="small text-secondary mt-2">
-                        @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
-                    </div>
-                }
+            <div class="p-4 p-lg-5 text-center">
+                <h3 class="h6 fw-bold mb-1">
+                    @ViewText.T("Không có mục tồn kho phù hợp", "No matching inventory records")
+                </h3>
+                <p class="text-secondary small mb-3">
+                    @ViewText.T(
+                        "Hãy thử bỏ lọc tồn thấp hoặc điều chỉnh từ khóa tìm kiếm.",
+                        "Try clearing the low-stock filter or adjusting your search keyword.")
+                </p>
+                <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
+                    @ViewText.T("Xem toàn bộ kho", "View All Inventory")
+                </a>
             </div>
         }
-
-        <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Bộ lọc tồn kho", "Inventory filter form")">
-            <div class="card-body p-3 p-lg-4">
-                <form id="admin-inventory-filter-form"
-                      method="get"
-                      action="/admin/kho"
-                      data-admin-filter-form="true"
-                      class="row g-3 align-items-end">
-                    <div class="col-12 col-md-5">
-                        <label for="admin-inventory-search" class="form-label small fw-semibold">
-                            @ViewText.T("Tìm theo tên sách hoặc mã SKU", "Search by book title or SKU")
-                        </label>
-                        <input id="admin-inventory-search"
-                               type="search"
-                               name="Search"
-                               value="@q.Search"
-                               maxlength="255"
-                               class="form-control form-control-sm"
-                               placeholder="@ViewText.T("Nhập tên sách hoặc SKU...", "Enter book title or SKU...")" />
-                        <span class="text-danger small">@Html.ValidationMessage("Search")</span>
-                    </div>
-
-                    <div class="col-6 col-md-2">
-                        <label for="admin-inventory-pagesize" class="form-label small fw-semibold">
-                            @ViewText.T("Số dòng/trang", "Per page")
-                        </label>
-                        <select id="admin-inventory-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
-                            @if (!presetPageSizes.Contains(q.PageSize))
-                            {
-                                <option value="@q.PageSize" selected>@q.PageSize</option>
-                            }
-                            @foreach (var size in presetPageSizes)
-                            {
-                                if (q.PageSize == size)
-                                {
-                                    <option value="@size" selected>@size</option>
-                                }
-                                else
-                                {
-                                    <option value="@size">@size</option>
-                                }
-                            }
-                        </select>
-                        <span class="text-danger small">@Html.ValidationMessage("PageSize")</span>
-                    </div>
-
-                    <div class="col-6 col-md-3">
-                        <div class="form-check pb-1">
-                            <input id="admin-inventory-lowstock"
-                                   class="form-check-input"
-                                   type="checkbox"
-                                   name="LowStockOnly"
-                                   value="true"
-                                   data-auto-submit="true"
-                                   checked="@(q.LowStockOnly ? "checked" : null)" />
-                            <label for="admin-inventory-lowstock" class="form-check-label small fw-medium">
-                                @ViewText.T($"Chỉ sách tồn thấp (<= {Model.LowStockThreshold})", $"Low stock only (<= {Model.LowStockThreshold})")
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-md-2 d-flex gap-2 justify-content-md-end">
-                        <button type="submit" class="btn btn-sm bs-btn-primary px-3">
-                            @ViewText.T("Lọc", "Apply")
-                        </button>
-                        <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
-                            @ViewText.T("Đặt lại", "Reset")
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <section class="card bs-surface-card" aria-label="@ViewText.T("Bảng danh sách tồn kho", "Inventory table")">
-            <div class="card-body p-0">
-                @if (Model.Inventories.Items.Count == 0)
-                {
-                    <div class="p-4 p-lg-5 text-center">
-                        <h2 class="h5 bs-serif-heading mb-2">
-                            @ViewText.T("Không có mục tồn kho phù hợp", "No matching inventory records")
-                        </h2>
-                        <p class="text-secondary small mb-3">
-                            @ViewText.T(
-                                "Hãy thử bỏ lọc tồn thấp hoặc điều chỉnh từ khóa tìm kiếm.",
-                                "Try clearing the low-stock filter or adjusting your search keyword.")
-                        </p>
-                        <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
-                            @ViewText.T("Xem toàn bộ kho", "View All Inventory")
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <div class="bs-admin-table-wrap">
-                        <table class="table table-hover bs-admin-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>@ViewText.T("Đầu sách", "Book")</th>
-                                    <th>SKU</th>
-                                    <th class="text-end">@ViewText.T("Tồn thực tế", "Physical (Quantity)")</th>
-                                    <th class="text-end">@ViewText.T("Đang giữ chỗ", "Reserved")</th>
-                                    <th class="text-end">@ViewText.T("Khả dụng", "Available")</th>
-                                    <th class="text-center">@ViewText.T("Cảnh báo kho", "Stock Status")</th>
-                                    <th class="text-end">@ViewText.T("Thao tác", "Actions")</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.Inventories.Items)
-                                {
-                                    var isLowStock = item.AvailableQuantity <= Model.LowStockThreshold;
-                                    var isOut = item.AvailableQuantity <= 0;
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                                <span class="fw-semibold">@item.Title</span>
-                                                @if (item.IsDeleted)
-                                                {
-                                                    <span class="badge bs-badge-deleted">
-                                                        @ViewText.T("Ngừng bán", "Stopped")
-                                                    </span>
-                                                }
-                                            </div>
-                                            <div class="small text-secondary">#@item.BookId</div>
-                                        </td>
-                                        <td class="text-nowrap"><code>@item.SKU</code></td>
-                                        <td class="text-end fw-semibold text-nowrap">@item.Quantity</td>
-                                        <td class="text-end text-secondary text-nowrap">@item.ReservedQuantity</td>
-                                        <td class="text-end fw-bold text-nowrap @(isOut ? "text-danger" : (isLowStock ? "text-warning-emphasis" : "text-success"))">
-                                            @item.AvailableQuantity
-                                        </td>
-                                        <td class="text-center text-nowrap">
-                                            @if (isOut)
-                                            {
-                                                <span class="badge bs-badge-outstock">
-                                                    @ViewText.T($"Hết khả dụng (<= {Model.LowStockThreshold})", $"Out of stock (<= {Model.LowStockThreshold})")
-                                                </span>
-                                            }
-                                            else if (isLowStock)
-                                            {
-                                                <span class="badge bs-badge-lowstock">
-                                                    @ViewText.T($"Cảnh báo tồn thấp (<= {Model.LowStockThreshold})", $"Low stock alert (<= {Model.LowStockThreshold})")
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bs-badge-instock">
-                                                    @ViewText.T("Đủ hàng", "Healthy")
-                                                </span>
-                                            }
-                                        </td>
-                                        <td class="text-end text-nowrap">
-                                            <div class="d-inline-flex flex-wrap justify-content-end gap-1">
-                                                <a href="/admin/kho/@item.BookId/nhap" class="btn btn-sm bs-btn-primary">
-                                                    @ViewText.T("Nhập kho", "Import")
-                                                </a>
-                                                <a href="/admin/kho/@item.BookId/lich-su" class="btn btn-sm btn-outline-secondary">
-                                                    @ViewText.T("Lịch sử", "History")
-                                                </a>
-                                                <a href="/admin/sach/@item.BookId/sua" class="btn btn-sm btn-outline-secondary">
-                                                    @ViewText.T("Sửa sách", "Edit Book")
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </section>
-
-        @if (Model.Inventories.TotalPages > 1)
+        else
         {
-            var currentPage = Model.Inventories.Page;
-            var totalPages = Model.Inventories.TotalPages;
-            var startPage = Math.Max(1, currentPage - 2);
-            var endPage = Math.Min(totalPages, currentPage + 2);
-
-            <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh sách tồn kho", "Inventory pagination")">
-                <ul class="pagination justify-content-center flex-wrap mb-0">
-                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
-                           tabindex="@(currentPage <= 1 ? "-1" : null)"
-                           aria-disabled="@(currentPage <= 1 ? "true" : null)">
-                            @ViewText.T("Trước", "Previous")
-                        </a>
-                    </li>
-
-                    @if (startPage > 1)
-                    {
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                        </li>
-                        @if (startPage > 2)
+            <div class="bs-admin-table-wrap">
+                <table class="table table-hover bs-admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>@ViewText.T("Đầu sách", "Book")</th>
+                            <th>SKU</th>
+                            <th class="text-end">@ViewText.T("Tồn thực tế", "Physical")</th>
+                            <th class="text-end">@ViewText.T("Giữ chỗ", "Reserved")</th>
+                            <th class="text-end">@ViewText.T("Khả dụng", "Available")</th>
+                            <th class="text-center">@ViewText.T("Cảnh báo kho", "Stock Status")</th>
+                            <th class="text-end">@ViewText.T("Thao tác", "Actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Inventories.Items)
                         {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            var isLowStock = item.AvailableQuantity <= Model.LowStockThreshold;
+                            var isOut = item.AvailableQuantity <= 0;
+                            <tr>
+                                <td>
+                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                        <span class="fw-semibold">@item.Title</span>
+                                        @if (item.IsDeleted)
+                                        {
+                                            <span class="badge bs-badge-deleted">
+                                                @ViewText.T("Ngừng bán", "Stopped")
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="small text-muted bs-tabular">#@item.BookId</div>
+                                </td>
+                                <td><code>@item.SKU</code></td>
+                                <td class="text-end fw-semibold bs-tabular">@item.Quantity</td>
+                                <td class="text-end text-secondary bs-tabular">@item.ReservedQuantity</td>
+                                <td class="text-end fw-bold bs-tabular @(isOut ? "text-danger" : isLowStock ? "text-warning" : "text-success")">
+                                    @item.AvailableQuantity
+                                </td>
+                                <td class="text-center text-nowrap">
+                                    @if (isOut)
+                                    {
+                                        <span class="badge bs-badge-outstock">
+                                            @ViewText.T("Hết hàng khả dụng", "Out of available stock")
+                                        </span>
+                                    }
+                                    else if (isLowStock)
+                                    {
+                                        <span class="badge bs-badge-lowstock">
+                                            @ViewText.T($"Tồn thấp (<= {Model.LowStockThreshold})", $"Low stock (<= {Model.LowStockThreshold})")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bs-badge-instock">
+                                            @ViewText.T("Đủ tồn kho", "Healthy stock")
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-end text-nowrap">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="/admin/kho/@item.BookId/nhap" class="btn btn-sm bs-btn-primary">
+                                            @ViewText.T("Nhập kho", "Import")
+                                        </a>
+                                        <a href="/admin/kho/@item.BookId/lich-su" class="btn btn-sm btn-outline-secondary">
+                                            @ViewText.T("Lịch sử", "History")
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                         }
-                    }
-
-                    @for (var p = startPage; p <= endPage; p++)
-                    {
-                        <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
-                            <a class="page-link" href="@BuildPageUrl(p)">@p</a>
-                        </li>
-                    }
-
-                    @if (endPage < totalPages)
-                    {
-                        @if (endPage < totalPages - 1)
-                        {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                        }
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a>
-                        </li>
-                    }
-
-                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
-                           tabindex="@(currentPage >= totalPages ? "-1" : null)"
-                           aria-disabled="@(currentPage >= totalPages ? "true" : null)">
-                            @ViewText.T("Tiếp", "Next")
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
-</div>
+</section>
 
-@section Scripts {
-    <script src="/js/admin.js"></script>
+@if (Model.Inventories.TotalPages > 1)
+{
+    var currentPage = Model.Inventories.Page;
+    var totalPages = Model.Inventories.TotalPages;
+    var startPage = Math.Max(1, currentPage - 2);
+    var endPage = Math.Min(totalPages, currentPage + 2);
+
+    <nav class="mt-4" aria-label="@ViewText.T("Phân trang tồn kho", "Inventory pagination")">
+        <ul class="pagination justify-content-center flex-wrap mb-0">
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
+                   tabindex="@(currentPage <= 1 ? "-1" : null)"
+                   aria-disabled="@(currentPage <= 1 ? "true" : null)">
+                    @ViewText.T("Trước", "Previous")
+                </a>
+            </li>
+
+            @if (startPage > 1)
+            {
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
+                @if (startPage > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+            }
+
+            @for (var p = startPage; p <= endPage; p++)
+            {
+                <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
+                    <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                </li>
+            }
+
+            @if (endPage < totalPages)
+            {
+                @if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
+            }
+
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
+                   tabindex="@(currentPage >= totalPages ? "-1" : null)"
+                   aria-disabled="@(currentPage >= totalPages ? "true" : null)">
+                    @ViewText.T("Tiếp", "Next")
+                </a>
+            </li>
+        </ul>
+    </nav>
 }

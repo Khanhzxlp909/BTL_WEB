@@ -1,299 +1,992 @@
+/* ==========================================================================
+   BookStore Storefront & Shared Design System
+   Sections:
+   1. Design Tokens & Bootstrap 5 Variable Overrides
+   2. Base Typography, Focus & Accessibility
+   3. Customer Header, Category Bar & Footer
+   4. Shared Components (Buttons, Cards, Badges, Forms, Tables, Alerts, Pagination)
+   5. Storefront Pages (Home Hero, Category Chips, Book Grid & Card, Catalog, Detail, Auth)
+   6. Utilities & Responsive Rules
+   ========================================================================== */
+
+/* 1. Design Tokens & Bootstrap 5 Variable Overrides */
 :root {
-    --bs-paper-bg: #f8f5ef;
-    --bs-surface-bg: #ffffff;
-    --bs-ink-primary: #1f2421;
-    --bs-ink-muted: #5c6460;
-    --bs-accent-forest: #1f4e3d;
-    --bs-accent-forest-hover: #163a2d;
-    --bs-accent-amber: #8c4a27;
-    --bs-border-warm: #e4ddd0;
-    --bs-serif-stack: Georgia, "Cambria", "Times New Roman", Times, serif;
-    --bs-sans-stack: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bs-page-bg: #FAFAF7;
+    --bs-admin-bg: #F5F5F4;
+    --bs-surface: #FFFFFF;
+    --bs-surface-subtle: #F5F5F4;
+    --bs-border: #E7E5E0;
+    --bs-border-strong: #D6D3CD;
+
+    --bs-text-main: #1C1917;
+    --bs-text-muted: #57534E;
+    --bs-text-faint: #78716C;
+
+    --bs-brand: #14532D;
+    --bs-brand-hover: #0F3F22;
+    --bs-brand-soft: #F0FDF4;
+    --bs-brand-border: #BBF7D0;
+
+    --bs-accent: #B45309;
+    --bs-accent-hover: #92400E;
+    --bs-accent-soft: #FEF3C7;
+
+    --bs-status-success: #15803D;
+    --bs-status-success-bg: #DCFCE7;
+    --bs-status-success-border: #BBF7D0;
+
+    --bs-status-warning: #B45309;
+    --bs-status-warning-bg: #FEF3C7;
+    --bs-status-warning-border: #FDE68A;
+
+    --bs-status-danger: #B91C1C;
+    --bs-status-danger-bg: #FEE2E2;
+    --bs-status-danger-border: #FECACA;
+
+    --bs-status-info: #1D4ED8;
+    --bs-status-info-bg: #DBEAFE;
+    --bs-status-info-border: #BFDBFE;
+
+    --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    --font-serif: Georgia, "Times New Roman", serif;
+
+    --radius-card: 8px;
+    --radius-ctrl: 6px;
+    --radius-pill: 999px;
+
+    --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.05);
+    --shadow-hover: 0 4px 12px rgba(28, 25, 23, 0.08);
+
+    /* Bootstrap 5 Overrides */
+    --bs-primary: #14532D;
+    --bs-primary-rgb: 20, 83, 45;
+    --bs-secondary: #57534E;
+    --bs-secondary-rgb: 87, 83, 78;
+    --bs-success: #15803D;
+    --bs-success-rgb: 21, 128, 61;
+    --bs-warning: #B45309;
+    --bs-warning-rgb: 180, 83, 9;
+    --bs-danger: #B91C1C;
+    --bs-danger-rgb: 185, 28, 28;
+    --bs-info: #1D4ED8;
+    --bs-info-rgb: 29, 78, 216;
+    --bs-body-bg: #FAFAF7;
+    --bs-body-color: #1C1917;
+    --bs-border-color: #E7E5E0;
+    --bs-link-color: #14532D;
+    --bs-link-color-rgb: 20, 83, 45;
+    --bs-link-hover-color: #0F3F22;
+    --bs-link-hover-color-rgb: 15, 63, 34;
+    --bs-font-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+    --bs-border-radius: 6px;
+    --bs-border-radius-sm: 6px;
+    --bs-border-radius-lg: 8px;
+}
+
+/* 2. Base Typography, Focus & Accessibility */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
 }
 
 body.bs-body {
-    background-color: var(--bs-paper-bg);
-    color: var(--bs-ink-primary);
-    font-family: var(--bs-sans-stack);
+    background-color: var(--bs-page-bg);
+    color: var(--bs-text-main);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--bs-brand);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: var(--bs-brand-hover);
+}
+
+:focus-visible {
+    outline: 2px solid var(--bs-brand);
+    outline-offset: 2px;
+}
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85em;
+    color: var(--bs-text-main);
+    background-color: var(--bs-surface-subtle);
+    border: 1px solid var(--bs-border);
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
 }
 
 .bs-serif-heading {
-    font-family: var(--bs-serif-stack);
+    font-family: var(--font-serif);
+    color: var(--bs-text-main);
     letter-spacing: -0.01em;
+    line-height: 1.25;
 }
 
+.bs-skip-link {
+    position: absolute;
+    top: -999px;
+    left: 1rem;
+    z-index: 2000;
+    background: var(--bs-brand);
+    color: #FFFFFF;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-ctrl);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.bs-skip-link:focus {
+    top: 0.75rem;
+    color: #FFFFFF;
+}
+
+.container,
+.bs-container {
+    max-width: 1200px;
+}
+
+/* 3. Customer Header, Category Bar & Footer */
 .bs-header {
-    background-color: var(--bs-surface-bg);
-    border-color: var(--bs-border-warm) !important;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background-color: var(--bs-surface);
+    border-bottom: 1px solid var(--bs-border);
+    box-shadow: var(--shadow-sm);
+}
+
+.bs-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 64px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
 }
 
 .bs-brand {
     display: inline-flex;
-    flex-direction: column;
-    line-height: 1.15;
+    align-items: center;
+    gap: 0.625rem;
+    text-decoration: none;
+    color: var(--bs-text-main);
+    flex-shrink: 0;
+}
+
+.bs-brand:hover {
+    color: var(--bs-brand);
 }
 
 .bs-brand-mark {
-    font-family: var(--bs-serif-stack);
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--bs-accent-forest);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background-color: var(--bs-brand);
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.bs-brand-sub {
-    font-size: 0.72rem;
-    color: var(--bs-ink-muted);
+.bs-brand-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--bs-text-main);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.bs-header-search {
+    flex: 1 1 420px;
+    max-width: 520px;
+}
+
+.bs-search-box {
+    display: flex;
+    align-items: center;
+    background-color: var(--bs-page-bg);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-ctrl);
+    padding: 0.125rem 0.25rem 0.125rem 0.75rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bs-search-box:focus-within {
+    background-color: var(--bs-surface);
+    border-color: var(--bs-brand);
+    box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.12);
+}
+
+.bs-search-icon {
+    color: var(--bs-text-faint);
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.bs-search-input {
+    border: 0;
+    background: transparent;
+    width: 100%;
+    font-size: 0.875rem;
+    color: var(--bs-text-main);
+    padding: 0.375rem 0;
+    outline: none;
+}
+
+.bs-search-input::placeholder {
+    color: var(--bs-text-faint);
+}
+
+.bs-search-submit {
+    border: 0;
+    background-color: var(--bs-brand);
+    color: #FFFFFF;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.375rem 0.875rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: background-color 0.15s ease;
+}
+
+.bs-search-submit:hover {
+    background-color: var(--bs-brand-hover);
+}
+
+.bs-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.bs-lang-switch {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-ctrl);
+    padding: 2px;
+    background-color: var(--bs-page-bg);
+}
+
+.bs-lang-btn {
+    border: 0;
+    background: transparent;
+    color: var(--bs-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    border-radius: 4px;
+    line-height: 1.2;
+}
+
+.bs-lang-btn:hover {
+    color: var(--bs-text-main);
+}
+
+.bs-lang-btn.active {
+    background-color: var(--bs-brand);
+    color: #FFFFFF;
+}
+
+.bs-header-cart-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-ctrl);
+    background-color: var(--bs-surface);
+    color: var(--bs-text-main);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.bs-header-cart-link:hover {
+    border-color: var(--bs-brand);
+    background-color: var(--bs-brand-soft);
+    color: var(--bs-brand);
+}
+
+.bs-cart-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-pill);
+    background-color: var(--bs-brand);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .bs-subnav {
-    background-color: #f3ede2;
-    border-color: var(--bs-border-warm) !important;
+    background-color: var(--bs-surface);
+    border-bottom: 1px solid var(--bs-border);
 }
 
-.bs-nav-link {
-    color: var(--bs-ink-primary);
+.bs-subnav-list {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 40px;
+    overflow-x: auto;
+}
+
+.bs-subnav-link {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    font-size: 0.875rem;
     font-weight: 500;
-    font-size: 0.92rem;
-    border-radius: 0.375rem;
+    color: var(--bs-text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+}
+
+.bs-subnav-link:hover {
+    color: var(--bs-brand);
+}
+
+.bs-subnav-link.active {
+    color: var(--bs-brand);
+    font-weight: 600;
+    border-bottom-color: var(--bs-brand);
+}
+
+.bs-footer {
+    background-color: var(--bs-surface);
+    border-top: 1px solid var(--bs-border);
+    color: var(--bs-text-muted);
+    font-size: 0.875rem;
+}
+
+.bs-footer a {
+    color: var(--bs-text-muted);
+    text-decoration: none;
+}
+
+.bs-footer a:hover {
+    color: var(--bs-brand);
+    text-decoration: underline;
+}
+
+/* 4. Shared Components (Buttons, Cards, Badges, Forms, Tables, Alerts, Pagination) */
+.btn {
+    border-radius: var(--radius-ctrl);
+    font-weight: 500;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary,
+.bs-btn-primary {
+    background-color: var(--bs-brand);
+    border-color: var(--bs-brand);
+    color: #FFFFFF;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.bs-btn-primary:hover,
+.bs-btn-primary:focus {
+    background-color: var(--bs-brand-hover);
+    border-color: var(--bs-brand-hover);
+    color: #FFFFFF;
+}
+
+.btn-primary:disabled,
+.bs-btn-primary:disabled {
+    background-color: var(--bs-brand);
+    border-color: var(--bs-brand);
+    opacity: 0.55;
+    color: #FFFFFF;
+}
+
+.bs-btn-navy,
+.btn-outline-secondary {
+    background-color: var(--bs-surface);
+    border-color: var(--bs-border-strong);
+    color: var(--bs-text-main);
+}
+
+.bs-btn-navy:hover,
+.btn-outline-secondary:hover {
+    background-color: var(--bs-surface-subtle);
+    border-color: var(--bs-text-muted);
+    color: var(--bs-text-main);
+}
+
+.card,
+.bs-surface-card,
+.bs-filter-card {
+    background-color: var(--bs-surface);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm);
+}
+
+.bs-page-header {
+    margin-bottom: 1.25rem;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--bs-border-strong);
+    border-radius: var(--radius-ctrl);
+    color: var(--bs-text-main);
+    font-size: 0.9375rem;
+}
+
+.form-control-sm,
+.form-select-sm {
+    font-size: 0.875rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--bs-brand);
+    box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.14);
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-brand);
+    border-color: var(--bs-brand);
+}
+
+.form-check-input:focus {
+    border-color: var(--bs-brand);
+    box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.14);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-hover);
+    padding: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.dropdown-item {
+    border-radius: 4px;
+    padding: 0.45rem 0.75rem;
+    color: var(--bs-text-main);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--bs-surface-subtle);
+    color: var(--bs-brand);
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--bs-brand);
+    color: #FFFFFF;
+}
+
+/* Badges */
+.badge {
+    border-radius: var(--radius-pill);
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.25em 0.65em;
+    letter-spacing: 0.01em;
+}
+
+.bs-badge-category {
+    background-color: var(--bs-surface-subtle);
+    color: var(--bs-text-muted);
+    border: 1px solid var(--bs-border);
+}
+
+.bs-badge-instock {
+    background-color: var(--bs-status-success-bg);
+    color: var(--bs-status-success);
+    border: 1px solid var(--bs-status-success-border);
+}
+
+.bs-badge-outstock,
+.bs-badge-deleted {
+    background-color: var(--bs-status-danger-bg);
+    color: var(--bs-status-danger);
+    border: 1px solid var(--bs-status-danger-border);
+}
+
+.bs-badge-lowstock,
+.bs-badge-price-changed,
+.bs-badge-rating {
+    background-color: var(--bs-status-warning-bg);
+    color: var(--bs-status-warning);
+    border: 1px solid var(--bs-status-warning-border);
+}
+
+/* Pagination */
+.pagination {
+    gap: 0.25rem;
+}
+
+.page-link {
+    color: var(--bs-text-main);
+    background-color: var(--bs-surface);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-ctrl);
+    font-size: 0.875rem;
     padding: 0.4rem 0.75rem;
 }
 
-.bs-nav-link:hover,
-.bs-nav-link:focus {
-    color: var(--bs-accent-forest);
-    background-color: rgba(31, 78, 61, 0.08);
+.page-link:hover {
+    color: var(--bs-brand);
+    background-color: var(--bs-brand-soft);
+    border-color: var(--bs-brand-border);
 }
 
-.bs-nav-link.active {
-    color: #ffffff;
-    background-color: var(--bs-accent-forest);
+.page-item.active .page-link {
+    background-color: var(--bs-brand);
+    border-color: var(--bs-brand);
+    color: #FFFFFF;
 }
 
-.bs-nav-admin {
-    border: 1px solid rgba(31, 78, 61, 0.25);
+.page-item.disabled .page-link {
+    color: var(--bs-text-faint);
+    background-color: var(--bs-surface-subtle);
+    border-color: var(--bs-border);
 }
 
-.bs-btn-primary {
-    background-color: var(--bs-accent-forest);
-    border-color: var(--bs-accent-forest);
-    color: #ffffff;
-    font-weight: 500;
+/* Empty State & Error Banner */
+.bs-empty-state {
+    background-color: var(--bs-surface);
+    border: 1px dashed var(--bs-border-strong);
+    border-radius: var(--radius-card);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
 }
 
-.bs-btn-primary:hover,
-.bs-btn-primary:focus {
-    background-color: var(--bs-accent-forest-hover);
-    border-color: var(--bs-accent-forest-hover);
-    color: #ffffff;
+.bs-error-banner {
+    border-left: 4px solid var(--bs-status-danger);
+    border-radius: var(--radius-card);
 }
 
-.bs-btn-active-lang {
-    background-color: var(--bs-accent-forest);
-    border-color: var(--bs-accent-forest);
-    color: #ffffff;
+.bs-error-code {
+    background-color: #FFFFFF;
+    color: var(--bs-status-danger);
+    border-color: var(--bs-status-danger-border);
     font-weight: 600;
 }
 
-.bs-user-pill {
-    max-width: 11rem;
+/* 5. Storefront Pages */
+
+/* Home Hero (compact <= 340px) */
+.bs-hero {
+    background: linear-gradient(135deg, #F4F3EE 0%, #FFFFFF 100%);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    padding: 1.75rem;
+    margin-bottom: 1.75rem;
 }
 
-.bs-hero-banner {
-    background: linear-gradient(135deg, #efe7d6 0%, #f8f4ec 65%, #e8efe9 100%);
-    border: 1px solid var(--bs-border-warm);
+.bs-hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 2.5vw, 2.15rem);
+    font-weight: 700;
+    color: var(--bs-text-main);
+    line-height: 1.25;
+    margin-bottom: 0.625rem;
 }
 
-.bs-kicker {
-    color: var(--bs-accent-amber);
-    letter-spacing: 0.08em;
+.bs-hero-desc {
+    color: var(--bs-text-muted);
+    font-size: 0.95rem;
+    max-width: 56ch;
+    margin-bottom: 1.25rem;
 }
 
-.bs-hero-lead {
-    color: #38403c;
-    font-size: 1.05rem;
+.bs-hero-art {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.bs-hero-emblem {
-    background-color: rgba(255, 255, 255, 0.85);
-    border-color: var(--bs-border-warm) !important;
+.bs-hero-art img {
+    width: 100%;
+    max-width: 340px;
+    max-height: 200px;
+    height: auto;
+    object-fit: contain;
 }
 
-.bs-surface-card {
-    background-color: var(--bs-surface-bg);
-    border: 1px solid var(--bs-border-warm);
-    box-shadow: 0 2px 6px rgba(31, 36, 33, 0.04);
+/* Category Chips */
+.bs-chip-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: thin;
 }
 
-.bs-category-pill {
-    background-color: var(--bs-surface-bg);
-    border: 1px solid var(--bs-border-warm);
-    color: var(--bs-ink-primary);
+.bs-category-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    background-color: var(--bs-surface);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-pill);
+    color: var(--bs-text-main);
+    font-size: 0.875rem;
     font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
-.bs-category-pill:hover,
-.bs-category-pill:focus {
-    border-color: var(--bs-accent-forest);
-    color: var(--bs-accent-forest);
-    background-color: #f0f5f2;
+.bs-category-chip:hover,
+.bs-category-chip.active {
+    background-color: var(--bs-brand);
+    border-color: var(--bs-brand);
+    color: #FFFFFF;
+}
+
+/* Book Grid & Card */
+.bs-book-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .bs-book-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .bs-book-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bs-book-grid-catalog {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .bs-book-grid-catalog {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1400px) {
+    .bs-book-grid-home {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
 }
 
 .bs-book-card {
-    background-color: var(--bs-surface-bg);
-    border: 1px solid var(--bs-border-warm);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background-color: var(--bs-surface);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .bs-book-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(31, 36, 33, 0.08);
+    border-color: var(--bs-border-strong);
+    box-shadow: var(--shadow-hover);
 }
 
-.bs-book-cover-wrap {
-    aspect-ratio: 3 / 4;
-    background-color: #f2ece1;
+.bs-book-cover-link {
+    display: block;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    background-color: #F4F3EE;
+    border-bottom: 1px solid var(--bs-border);
     overflow: hidden;
-    border-bottom: 1px solid var(--bs-border-warm);
+    text-decoration: none;
 }
 
 .bs-book-cover-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+
+.bs-book-card:hover .bs-book-cover-img {
+    transform: scale(1.02);
 }
 
 .bs-book-cover-placeholder {
-    aspect-ratio: 3 / 4;
-    background: linear-gradient(160deg, #24473a 0%, #183228 100%);
-    color: #f6f1e7;
-    padding: 1.25rem;
+    width: 100%;
+    height: 100%;
+    padding: 0.875rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    border-bottom: 1px solid var(--bs-border-warm);
+    background: linear-gradient(160deg, #F8F7F2 0%, #EFECE4 100%);
+    color: var(--bs-text-main);
 }
 
-.bs-detail-cover-placeholder {
-    min-height: 22rem;
+.bs-book-cover-placeholder-inner {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #DFDCD3;
+    border-radius: 6px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: rgba(255, 255, 255, 0.55);
 }
 
 .bs-book-cover-category {
-    font-size: 0.72rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    opacity: 0.85;
+    letter-spacing: 0.04em;
+    color: var(--bs-brand);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .bs-book-cover-title {
-    font-family: var(--bs-serif-stack);
-    font-size: 1.05rem;
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--bs-text-main);
     line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
 }
 
 .bs-book-cover-author {
-    font-size: 0.82rem;
-    opacity: 0.9;
+    font-size: 0.75rem;
+    color: var(--bs-text-muted);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.bs-book-cover-sku {
-    font-size: 0.72rem;
-    opacity: 0.75;
-    font-family: monospace;
+.bs-book-card-body {
+    padding: 0.875rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
 }
 
-.bs-book-title a {
-    color: var(--bs-ink-primary);
+.bs-book-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.4;
+    min-height: 2.625rem;
+    margin-bottom: 0.25rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
+.bs-book-title a {
+    color: var(--bs-text-main);
+    text-decoration: none;
+}
+
 .bs-book-title a:hover {
-    color: var(--bs-accent-forest);
+    color: var(--bs-brand);
 }
 
-.bs-badge-category {
-    background-color: #efe8da;
-    color: #493b2a;
-    font-weight: 600;
-    max-width: 65%;
-}
-
-.bs-badge-instock {
-    background-color: #e3f1e8;
-    color: #1b5e3a;
-    font-weight: 600;
-}
-
-.bs-badge-outstock {
-    background-color: #f8e5e5;
-    color: #8b2626;
-    font-weight: 600;
-}
-
-.bs-badge-rating {
-    background-color: #f3e6d0;
-    color: #6e4214;
-    font-weight: 600;
+.bs-book-author {
+    font-size: 0.8125rem;
+    color: var(--bs-text-muted);
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .bs-price-current {
-    color: var(--bs-accent-amber);
     font-weight: 700;
-    font-size: 1.02rem;
+    color: var(--bs-brand);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.bs-price-sale {
+    color: var(--bs-accent);
 }
 
 .bs-price-original {
-    color: var(--bs-ink-muted);
-    font-size: 0.82rem;
+    font-size: 0.8125rem;
+    color: var(--bs-text-faint);
+    font-variant-numeric: tabular-nums;
 }
 
-.bs-card-cta {
-    color: var(--bs-accent-forest);
+.bs-card-cart-actions {
+    position: relative;
+    z-index: 2;
+    margin-top: 0.625rem;
+    padding-top: 0.625rem;
+    border-top: 1px solid var(--bs-border);
+}
+
+/* Catalog Sidebar Layout */
+.bs-catalog-sidebar {
+    position: sticky;
+    top: 80px;
+}
+
+.bs-catalog-toolbar {
+    background-color: var(--bs-surface);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Book Detail Page */
+.bs-detail-cover-wrap,
+.bs-detail-cover-placeholder {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--bs-border);
+    background-color: #F4F3EE;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.bs-detail-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.bs-detail-cover-placeholder {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(160deg, #F8F7F2 0%, #EFECE4 100%);
 }
 
 .bs-detail-price-box {
-    background-color: #f6f1e7;
-    border: 1px solid var(--bs-border-warm);
+    background-color: var(--bs-page-bg);
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    padding: 1rem 1.25rem;
+}
+
+.bs-spec-table th {
+    width: 38%;
+    color: var(--bs-text-muted);
+    font-weight: 500;
+    background-color: var(--bs-page-bg);
+}
+
+/* Auth Card (420px centered) */
+.bs-auth-wrap {
+    max-width: 440px;
+    margin: 1.5rem auto;
+}
+
+/* 6. Utilities & Responsive Rules */
+.bs-tabular {
+    font-variant-numeric: tabular-nums;
 }
 
 .bs-preline {
     white-space: pre-line;
-    line-height: 1.65;
 }
 
-.bs-metric-card {
-    background-color: #fbf9f5;
-    border-color: var(--bs-border-warm) !important;
+.bs-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-.bs-metric-delivered {
-    border-left: 4px solid #1b5e3a !important;
+@media (max-width: 767.98px) {
+    .bs-header-inner {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .bs-brand {
+        order: 1;
+    }
+
+    .bs-header-actions {
+        order: 2;
+        margin-left: auto;
+    }
+
+    .bs-header-search {
+        order: 3;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .bs-hero {
+        padding: 1.25rem;
+    }
 }
 
-.bs-metric-pending {
-    border-left: 4px solid #9a6700 !important;
+@media (max-width: 374.98px) {
+    .bs-book-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.bs-metric-cancelled {
-    border-left: 4px solid #8b2626 !important;
-}
-
-.bs-footer {
-    background-color: var(--bs-surface-bg);
-    border-color: var(--bs-border-warm) !important;
-}
-
-.pagination .page-item.active .page-link {
-    background-color: var(--bs-accent-forest);
-    border-color: var(--bs-accent-forest);
-}
-
-.pagination .page-link {
-    color: var(--bs-accent-forest);
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

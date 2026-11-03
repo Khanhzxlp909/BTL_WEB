@@ -17,28 +17,29 @@
 
     var codChecked = ViewData.ModelState.TryGetValue("ConfirmCodCollected", out var codState)
         && string.Equals(codState.AttemptedValue, "true", StringComparison.OrdinalIgnoreCase);
+
+    var cancelConfirmMessage = ViewText.T(
+        $"Bạn có chắc chắn muốn hủy đơn hàng {order.OrderCode}? Thao tác này không thể hoàn tác.",
+        $"Are you sure you want to cancel order {order.OrderCode}? This action cannot be undone.");
 }
 
 @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể cập nhật đơn hàng. Vui lòng kiểm tra thông báo bên dưới:", "Could not update order. Please review the details below:"))
 
 <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Thông tin chung đơn hàng", "Order overview")">
     <div class="card-body p-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 pb-3 border-bottom mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 pb-3 border-bottom mb-4">
             <div>
-                <div class="small text-secondary mb-1">
-                    @ViewText.T("Mã đơn hàng", "Order Code")
-                </div>
-                <h1 class="h3 bs-serif-heading mb-2 d-flex flex-wrap align-items-center gap-2">
+                <h1 class="h4 bs-serif-heading mb-2 d-flex flex-wrap align-items-center gap-2">
                     <code>@order.OrderCode</code>
                     @await Html.PartialAsync("_OrderStatusBadge", order.Status)
                     @await Html.PartialAsync("_PaymentStatusBadge", order.PaymentStatus)
                 </h1>
-                <div class="small text-secondary d-flex flex-wrap gap-3">
+                <div class="small text-secondary d-flex flex-wrap gap-3 bs-tabular">
                     <span>
-                        @ViewText.T("Tài khoản đặt:", "Account:") <strong class="text-dark">@order.UserName</strong>
+                        @ViewText.T("Khách hàng:", "Account:") <strong class="text-dark">@order.UserName</strong>
                     </span>
                     <span>
-                        @ViewText.T("Ngày tạo:", "Created:") <strong class="text-dark">@ViewText.FormatVietnamTime(order.CreatedAt)</strong>
+                        @ViewText.T("Ngày đặt:", "Created:") <strong class="text-dark">@ViewText.FormatVietnamTime(order.CreatedAt)</strong>
                     </span>
                     @if (order.DeliveredAt.HasValue)
                     {
@@ -57,27 +58,27 @@
 
             <a href="@listUrl" class="btn btn-sm btn-outline-secondary">
                 &larr; @(Model.IsAdmin
-                    ? ViewText.T("Danh sách đơn quản trị", "Back to Admin Orders")
+                    ? ViewText.T("Danh sách đơn", "Back to Orders")
                     : ViewText.T("Đơn hàng của tôi", "Back to My Orders"))
             </a>
         </div>
 
         <div class="row g-4">
             <div class="col-12 col-md-7">
-                <h2 class="h6 fw-bold text-uppercase text-secondary mb-3">
-                    @ViewText.T("Thông tin người nhận (Snapshot)", "Recipient Snapshot")
+                <h2 class="h6 fw-bold mb-3">
+                    @ViewText.T("Thông tin nhận hàng", "Delivery Information")
                 </h2>
                 <dl class="row small mb-0">
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Người nhận", "Recipient")</dt>
-                    <dd class="col-sm-8 fw-semibold">@order.RecipientName</dd>
+                    <dt class="col-sm-4 text-secondary mb-2">@ViewText.T("Người nhận", "Recipient")</dt>
+                    <dd class="col-sm-8 fw-semibold mb-2">@order.RecipientName</dd>
 
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Số điện thoại", "Phone")</dt>
-                    <dd class="col-sm-8">@order.Phone</dd>
+                    <dt class="col-sm-4 text-secondary mb-2">@ViewText.T("Số điện thoại", "Phone")</dt>
+                    <dd class="col-sm-8 mb-2 bs-tabular">@order.Phone</dd>
 
-                    <dt class="col-sm-4 text-secondary">@ViewText.T("Địa chỉ giao hàng", "Shipping Address")</dt>
-                    <dd class="col-sm-8 bs-preline bs-wrap-anywhere">@order.ShippingAddress</dd>
+                    <dt class="col-sm-4 text-secondary mb-2">@ViewText.T("Địa chỉ giao hàng", "Shipping Address")</dt>
+                    <dd class="col-sm-8 mb-2 bs-preline bs-wrap-anywhere">@order.ShippingAddress</dd>
 
-                    <dt class="col-sm-4 text-secondary mb-0">@ViewText.T("Ghi chú đơn", "Order Note")</dt>
+                    <dt class="col-sm-4 text-secondary mb-0">@ViewText.T("Ghi chú", "Order Note")</dt>
                     <dd class="col-sm-8 mb-0 bs-preline bs-wrap-anywhere">
                         @(string.IsNullOrWhiteSpace(order.Note)
                             ? ViewText.T("Không có ghi chú", "None")
@@ -87,28 +88,28 @@
             </div>
 
             <div class="col-12 col-md-5">
-                <div class="bs-cart-summary-card rounded-3 p-3 h-100">
-                    <h2 class="h6 fw-bold text-uppercase text-secondary mb-3">
-                        @ViewText.T("Thanh toán & Tổng tiền", "Payment & Totals")
+                <div class="bg-light border rounded-2 p-3 h-100">
+                    <h2 class="h6 fw-bold mb-3">
+                        @ViewText.T("Thanh toán & Tổng tiền", "Payment Summary")
                     </h2>
                     <div class="d-flex justify-content-between small mb-2">
                         <span class="text-secondary">@ViewText.T("Phương thức:", "Method:")</span>
                         <span class="fw-semibold">@order.PaymentMethod (@ViewText.T("Thanh toán khi nhận hàng", "Cash on Delivery"))</span>
                     </div>
                     <div class="d-flex justify-content-between small mb-2">
-                        <span class="text-secondary">@ViewText.T("Trạng thái thanh toán:", "Payment Status:")</span>
+                        <span class="text-secondary">@ViewText.T("Trạng thái:", "Status:")</span>
                         <span>@await Html.PartialAsync("_PaymentStatusBadge", order.PaymentStatus)</span>
                     </div>
                     <hr class="my-2" />
-                    <div class="d-flex justify-content-between small mb-1">
+                    <div class="d-flex justify-content-between small mb-1 bs-tabular">
                         <span class="text-secondary">@ViewText.T("Tạm tính:", "Subtotal:")</span>
                         <span>@ViewText.FormatVnd(order.Subtotal)</span>
                     </div>
-                    <div class="d-flex justify-content-between small mb-2">
+                    <div class="d-flex justify-content-between small mb-2 bs-tabular">
                         <span class="text-secondary">@ViewText.T("Phí giao hàng:", "Shipping Fee:")</span>
                         <span>@ViewText.FormatVnd(order.ShippingFee)</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-baseline border-top pt-2">
+                    <div class="d-flex justify-content-between align-items-baseline border-top pt-2 bs-tabular">
                         <span class="fw-bold">@ViewText.T("Tổng cộng:", "Total:")</span>
                         <span class="fs-5 fw-bold bs-price-current">@ViewText.FormatVnd(order.TotalAmount)</span>
                     </div>
@@ -120,11 +121,11 @@
 
 <section class="card bs-surface-card mb-4" aria-labelledby="order-items-heading">
     <div class="card-body p-0">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 p-lg-4 border-bottom">
-            <h2 id="order-items-heading" class="h5 bs-serif-heading mb-0">
-                @ViewText.T("Chi tiết sách trong đơn (Snapshot lúc đặt)", "Ordered Books Snapshot")
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-3 border-bottom">
+            <h2 id="order-items-heading" class="h6 fw-bold mb-0">
+                @ViewText.T("Sản phẩm trong đơn", "Ordered Items")
             </h2>
-            <span class="badge text-bg-light border">
+            <span class="badge bs-badge-category bs-tabular">
                 @order.Items.Count @ViewText.T("đầu sách", "titles")
             </span>
         </div>
@@ -135,7 +136,7 @@
                     <tr>
                         <th>@ViewText.T("Tên sách", "Book Title")</th>
                         <th>SKU</th>
-                        <th class="text-end">@ViewText.T("Đơn giá chốt", "Snapshot Price")</th>
+                        <th class="text-end">@ViewText.T("Đơn giá", "Unit Price")</th>
                         <th class="text-center">@ViewText.T("Số lượng", "Quantity")</th>
                         <th class="text-end">@ViewText.T("Thành tiền", "Line Total")</th>
                         @if (showReviewLinks)
@@ -152,9 +153,9 @@
                                 <a href="/sach/@line.BookId" class="text-decoration-none">@line.BookTitle</a>
                             </td>
                             <td class="text-nowrap"><code>@line.SKU</code></td>
-                            <td class="text-end text-nowrap">@ViewText.FormatVnd(line.UnitPrice)</td>
-                            <td class="text-center">@line.Quantity</td>
-                            <td class="text-end fw-semibold text-nowrap">@ViewText.FormatVnd(line.LineTotal)</td>
+                            <td class="text-end text-nowrap bs-tabular">@ViewText.FormatVnd(line.UnitPrice)</td>
+                            <td class="text-center bs-tabular">@line.Quantity</td>
+                            <td class="text-end fw-semibold text-nowrap bs-price-current bs-tabular">@ViewText.FormatVnd(line.LineTotal)</td>
                             @if (showReviewLinks)
                             {
                                 <td class="text-end text-nowrap">
@@ -188,14 +189,17 @@
         OrderStatus.DELIVERED => "Delivered",
         _ => nextStatus.ToString()
     };
+    var transitionConfirmMsg = ViewText.T(
+        $"Xác nhận chuyển trạng thái đơn {order.OrderCode} sang “{nextLabelVi}”?",
+        $"Confirm transitioning order {order.OrderCode} to “{nextLabelEn}”?");
 
     <section class="card bs-surface-card mb-4" aria-labelledby="admin-transition-heading">
         <div class="card-body p-4">
-            <h2 id="admin-transition-heading" class="h5 bs-serif-heading mb-2">
-                @ViewText.T("Xử lý bước tiếp theo của đơn hàng", "Advance Order Workflow")
+            <h2 id="admin-transition-heading" class="h6 fw-bold mb-2">
+                @ViewText.T("Cập nhật trạng thái đơn hàng", "Update Order Status")
             </h2>
             <p class="small text-secondary mb-3">
-                @ViewText.T("Bước chuyển hợp lệ duy nhất hiện tại:", "Only valid next workflow step:")
+                @ViewText.T("Bước chuyển tiếp theo:", "Next workflow step:")
                 @await Html.PartialAsync("_OrderStatusBadge", order.Status)
                 <span class="mx-1">&rarr;</span>
                 @await Html.PartialAsync("_OrderStatusBadge", nextStatus)
@@ -204,14 +208,14 @@
             <form method="post"
                   action="/admin/don-hang/@order.Id/trang-thai"
                   asp-antiforgery="true"
-                  data-confirm="@ViewText.T($"Xác nhận chuyển trạng thái đơn {order.OrderCode} sang \"{nextLabelVi}\"?", $"Confirm transitioning order {order.OrderCode} to \"{nextLabelEn}\"?")"
+                  data-confirm="@transitionConfirmMsg"
                   data-prevent-double-submit="true"
                   novalidate>
                 <input type="hidden" name="Status" value="@nextStatus" />
 
                 @if (nextStatus == OrderStatus.DELIVERED)
                 {
-                    <div class="form-check p-3 ps-5 rounded-3 border bg-light-subtle mb-3">
+                    <div class="form-check p-3 ps-5 rounded-2 border bg-light mb-3">
                         <input class="form-check-input"
                                type="checkbox"
                                id="ConfirmCodCollected"
@@ -221,19 +225,19 @@
                                required />
                         <label class="form-check-label fw-semibold" for="ConfirmCodCollected">
                             @ViewText.T(
-                                $"Tôi xác nhận đơn hàng {order.OrderCode} đã giao thành công cho người nhận và đã thu đủ tiền COD {ViewText.FormatVnd(order.TotalAmount)}.",
-                                $"I confirm order {order.OrderCode} has been delivered to the recipient and full COD payment of {ViewText.FormatVnd(order.TotalAmount)} has been collected.")
+                                $"Tôi xác nhận đơn hàng đã giao thành công tới người nhận và đã thu đủ tiền mặt COD ({ViewText.FormatVnd(order.TotalAmount)}).",
+                                $"I confirm the order has been delivered and the full COD amount ({ViewText.FormatVnd(order.TotalAmount)}) has been collected.")
                         </label>
                         <input type="hidden" name="ConfirmCodCollected" value="false" />
-                        @if (ViewData.ModelState.TryGetValue("ConfirmCodCollected", out var codErrors) && codErrors.Errors.Count > 0)
+                        @if (ViewData.ModelState.TryGetValue("ConfirmCodCollected", out var codErr) && codErr.Errors.Count > 0)
                         {
-                            <div class="text-danger small mt-1">@codErrors.Errors[0].ErrorMessage</div>
+                            <div class="text-danger small mt-1">@codErr.Errors[0].ErrorMessage</div>
                         }
                     </div>
                 }
 
-                <button type="submit" class="btn bs-btn-primary">
-                    @ViewText.T($"Xác nhận chuyển sang: {nextLabelVi}", $"Confirm transition to: {nextLabelEn}")
+                <button type="submit" class="btn bs-btn-primary px-4">
+                    @ViewText.T($"Chuyển sang: {nextLabelVi}", $"Mark as: {nextLabelEn}")
                 </button>
             </form>
         </div>
@@ -242,21 +246,21 @@
 
 @if (order.CanCancel)
 {
-    <section class="card bs-surface-card border-danger-subtle mb-4" aria-labelledby="cancel-order-heading">
+    <section class="card bs-surface-card border-danger-subtle mb-4" aria-labelledby="order-cancel-heading">
         <div class="card-body p-4">
-            <h2 id="cancel-order-heading" class="h5 bs-serif-heading text-danger mb-2">
+            <h2 id="order-cancel-heading" class="h6 fw-bold text-danger mb-2">
                 @ViewText.T("Hủy đơn hàng", "Cancel Order")
             </h2>
             <p class="small text-secondary mb-3">
                 @ViewText.T(
-                    "Đơn hàng đang ở trạng thái cho phép hủy (Chờ xác nhận / Đã xác nhận). Khi hủy, số lượng sách đang giữ chỗ sẽ được hoàn trả lại kho.",
+                    "Đơn hàng đang ở trạng thái cho phép hủy (Chờ xác nhận / Đã xác nhận). Khi hủy, số lượng sách giữ chỗ sẽ được hoàn trả lại kho.",
                     "This order can still be cancelled (Pending / Confirmed). Cancelling releases reserved stock back to available inventory.")
             </p>
 
             <form method="post"
                   action="@cancelActionUrl"
                   asp-antiforgery="true"
-                  data-confirm="@ViewText.T($"Bạn có chắc chắn muốn hủy đơn hàng {order.OrderCode}? Thao tác này không thể hoàn tác.", $"Are you sure you want to cancel order {order.OrderCode}? This action cannot be undone.")"
+                  data-confirm="@cancelConfirmMessage"
                   data-prevent-double-submit="true"
                   novalidate>
                 <div class="mb-3">
@@ -277,7 +281,7 @@
                               maxlength="500"
                               required="@(requiresCancelReason ? "required" : null)"
                               placeholder="@(requiresCancelReason
-                                  ? ViewText.T("Nhập lý do hủy đơn rõ ràng để thông báo và lưu lịch sử...", "Provide a clear cancellation reason for audit history...")
+                                  ? ViewText.T("Nhập lý do hủy đơn rõ ràng để lưu lịch sử...", "Provide a clear cancellation reason for audit history...")
                                   : ViewText.T("Ghi chú lý do hủy nếu cần (tối đa 500 ký tự)...", "Optional note explaining why you are cancelling (up to 500 characters)..."))">@attemptedReason</textarea>
                     <div class="form-text small">
                         @ViewText.T("Tối đa 500 ký tự.", "Up to 500 characters.")
@@ -298,8 +302,8 @@
 
 <section class="card bs-surface-card" aria-labelledby="order-timeline-heading">
     <div class="card-body p-4">
-        <h2 id="order-timeline-heading" class="h5 bs-serif-heading mb-3">
-            @ViewText.T("Lịch sử xử lý đơn hàng (Timeline)", "Order Event Timeline")
+        <h2 id="order-timeline-heading" class="h6 fw-bold mb-3">
+            @ViewText.T("Lịch sử trạng thái đơn hàng", "Order Timeline")
         </h2>
 
         @if (order.Events.Count == 0)
@@ -324,7 +328,7 @@
                                 }
                                 @await Html.PartialAsync("_OrderStatusBadge", ev.ToStatus)
                             </div>
-                            <time class="small text-secondary" datetime="@ev.CreatedAt.ToString("O", CultureInfo.InvariantCulture)">
+                            <time class="small text-secondary bs-tabular" datetime="@ev.CreatedAt.ToString("O", CultureInfo.InvariantCulture)">
                                 @ViewText.FormatVietnamTime(ev.CreatedAt)
                             </time>
                         </div>
@@ -333,7 +337,7 @@
                         </div>
                         @if (!string.IsNullOrWhiteSpace(ev.Note))
                         {
-                            <div class="small mt-1 p-2 rounded bg-light-subtle border bs-preline bs-wrap-anywhere">@ev.Note</div>
+                            <div class="small mt-1 p-2 rounded bg-light border bs-preline bs-wrap-anywhere">@ev.Note</div>
                         }
                     </li>
                 }

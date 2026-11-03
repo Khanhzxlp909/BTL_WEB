@@ -1,11 +1,10 @@
 @model InventoryHistoryViewModel
 @{
+    Layout = "_AdminLayout";
     var inv = Model.Inventory;
     var q = Model.Query;
+    ViewData["Title"] = ViewText.T($"Lịch sử kho — {inv.Title}", $"Stock History — {inv.Title}");
     var presetPageSizes = new[] { 8, 12, 24, 48, 100 };
-    ViewData["Title"] = ViewText.T($"Lịch sử kho — {inv.Title}", $"Inventory History — {inv.Title}");
-    var errorCode = ViewData["ErrorCode"] as string;
-    var traceId = ViewData["TraceId"] as string;
 
     string BuildPageUrl(int targetPage)
     {
@@ -24,301 +23,249 @@
         return string.IsNullOrEmpty(queryString) ? basePath : $"{basePath}?{queryString}";
     }
 
-    string FormatDelta(int delta) => delta > 0
-        ? $"+{delta.ToString(CultureInfo.InvariantCulture)}"
-        : delta.ToString(CultureInfo.InvariantCulture);
+    string FormatDelta(int delta) => delta > 0 ? $"+{delta}" : delta.ToString(CultureInfo.InvariantCulture);
 
-    string DeltaCssClass(int delta) => delta > 0
-        ? "bs-delta-positive"
-        : (delta < 0 ? "bs-delta-negative" : "bs-delta-neutral");
-
-    string FormatTypeLabel(InventoryTransactionType type) => type switch
+    (string Label, string BadgeClass) FormatTransactionType(InventoryTransactionType type) => type switch
     {
-        InventoryTransactionType.IMPORT => ViewText.T("Nhập kho (IMPORT)", "Stock Import (IMPORT)"),
-        InventoryTransactionType.ORDER_PLACED => ViewText.T("Đặt hàng giữ chỗ (ORDER_PLACED)", "Order Placed / Reserved (ORDER_PLACED)"),
-        InventoryTransactionType.ORDER_DELIVERED => ViewText.T("Giao hàng xuất kho (ORDER_DELIVERED)", "Order Delivered (ORDER_DELIVERED)"),
-        InventoryTransactionType.ORDER_CANCELLED => ViewText.T("Hủy đơn hoàn giữ chỗ (ORDER_CANCELLED)", "Order Cancelled / Released (ORDER_CANCELLED)"),
-        _ => type.ToString()
+        InventoryTransactionType.IMPORT => (ViewText.T("Nhập kho", "Import"), "bs-badge-instock"),
+        InventoryTransactionType.ORDER_PLACED => (ViewText.T("Đặt đơn (Giữ chỗ)", "Order Placed (Reserve)"), "bs-badge-lowstock"),
+        InventoryTransactionType.ORDER_DELIVERED => (ViewText.T("Giao thành công (Trừ kho)", "Order Delivered"), "bs-badge-category"),
+        InventoryTransactionType.ORDER_CANCELLED => (ViewText.T("Hủy đơn (Hoàn giữ chỗ)", "Order Cancelled (Release)"), "bs-badge-deleted"),
+        _ => (type.ToString(), "bs-badge-category")
     };
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/kho/@inv.BookId/nhap" class="btn btn-sm bs-btn-primary">
+        + @ViewText.T("Nhập thêm kho", "Import Stock")
+    </a>
+    <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
+        &larr; @ViewText.T("Danh sách kho", "Back to Inventory")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Tham số phân trang lịch sử kho chưa hợp lệ:", "Invalid inventory history query parameters:"))
+
+<section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Thông tin đầu sách", "Book inventory summary")">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div>
-                <h1 class="h3 bs-serif-heading mb-1">@ViewText.T("Lịch sử biến động kho", "Inventory Movement History")</h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        "Nhật ký kiểm toán chỉ xem (append-only): không hỗ trợ sửa hoặc xóa các bản ghi lịch sử kho.",
-                        "Read-only audit log (append-only): inventory history records cannot be edited or deleted.")
-                </p>
+                <div class="small text-secondary bs-tabular">@ViewText.T("Đầu sách", "Book") #@inv.BookId &middot; <code>@inv.SKU</code></div>
+                <h2 class="h5 fw-bold mb-0 d-flex flex-wrap align-items-center gap-2">
+                    <span>@inv.Title</span>
+                    @if (inv.IsDeleted)
+                    {
+                        <span class="badge bs-badge-deleted">@ViewText.T("Ngừng bán", "Stopped")</span>
+                    }
+                    else
+                    {
+                        <span class="badge bs-badge-instock">@ViewText.T("Đang bán", "Active")</span>
+                    }
+                </h2>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="/admin/kho/@inv.BookId/nhap" class="btn btn-sm bs-btn-primary">
-                    @ViewText.T("Nhập thêm kho", "Import Stock")
-                </a>
-                <a href="/admin/kho" class="btn btn-sm btn-outline-secondary">
-                    @ViewText.T("Danh sách kho", "Back to Inventory")
-                </a>
-            </div>
+
+            <form method="get"
+                  action="/admin/kho/@inv.BookId/lich-su"
+                  data-admin-filter-form="true"
+                  class="d-flex align-items-center gap-2">
+                @if (!string.IsNullOrWhiteSpace(q.Search))
+                {
+                    <input type="hidden" name="Search" value="@q.Search" />
+                }
+                <label for="history-pagesize" class="form-label small fw-semibold mb-0 text-nowrap">
+                    @ViewText.T("Số dòng/trang:", "Per page:")
+                </label>
+                <select id="history-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
+                    @if (!presetPageSizes.Contains(q.PageSize))
+                    {
+                        <option value="@q.PageSize" selected>@q.PageSize</option>
+                    }
+                    @foreach (var size in presetPageSizes)
+                    {
+                        if (q.PageSize == size)
+                        {
+                            <option value="@size" selected>@size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                    @ViewText.T("Áp dụng", "Apply")
+                </button>
+            </form>
         </div>
 
-        @if (!ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode))
-        {
-            <div class="alert alert-danger" role="alert">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                    <strong>@ViewText.T("Tham số phân trang chưa hợp lệ. Hãy kiểm tra chi tiết bên dưới:", "Invalid pagination parameters. Please review the details below:")</strong>
-                    @if (!string.IsNullOrWhiteSpace(errorCode))
-                    {
-                        <code class="bs-error-code">@errorCode</code>
-                    }
+        <div class="row g-3">
+            <div class="col-12 col-sm-4">
+                <div class="bs-stock-pill h-100">
+                    <div class="small text-secondary">@ViewText.T("Tồn thực tế hiện tại", "Current Physical Stock")</div>
+                    <div class="fs-4 fw-bold bs-tabular">@inv.Quantity</div>
                 </div>
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="small mb-0"></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(traceId))
-                {
-                    <div class="small text-secondary mt-2">
-                        @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
-                    </div>
-                }
+            </div>
+            <div class="col-12 col-sm-4">
+                <div class="bs-stock-pill h-100">
+                    <div class="small text-secondary">@ViewText.T("Đang giữ chỗ hiện tại", "Current Reserved Stock")</div>
+                    <div class="fs-4 fw-bold text-secondary bs-tabular">@inv.ReservedQuantity</div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-4">
+                <div class="bs-stock-pill h-100">
+                    <div class="small text-secondary">@ViewText.T("Khả dụng hiện tại", "Current Available Stock")</div>
+                    <div class="fs-4 fw-bold bs-tabular @(inv.AvailableQuantity > 0 ? "text-success" : "text-danger")">@inv.AvailableQuantity</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card bs-surface-card" aria-label="@ViewText.T("Bảng lịch sử giao dịch kho", "Inventory transactions table")">
+    <div class="card-body p-0">
+        @if (Model.History.Items.Count == 0)
+        {
+            <div class="p-4 p-lg-5 text-center">
+                <h3 class="h6 fw-bold mb-1">
+                    @ViewText.T("Chưa có biến động kho nào được ghi nhận", "No inventory movements recorded yet")
+                </h3>
+                <p class="text-secondary small mb-3">
+                    @ViewText.T(
+                        "Các lần nhập kho hoặc biến động từ đơn hàng của đầu sách này sẽ xuất hiện tại đây.",
+                        "Stock imports and order-driven movements for this book will appear here.")
+                </p>
+                <a href="/admin/kho/@inv.BookId/nhap" class="btn btn-sm bs-btn-primary">
+                    @ViewText.T("Nhập kho ngay", "Import Stock Now")
+                </a>
             </div>
         }
-
-        <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Tóm tắt tồn kho đầu sách", "Book inventory summary")">
-            <div class="card-body p-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                    <div>
-                        <div class="small text-secondary">@ViewText.T("Đầu sách", "Book") #@inv.BookId &middot; <code>@inv.SKU</code></div>
-                        <h2 class="h5 bs-serif-heading mb-0 d-flex flex-wrap align-items-center gap-2">
-                            <span>@inv.Title</span>
-                            @if (inv.IsDeleted)
-                            {
-                                <span class="badge bs-badge-deleted">@ViewText.T("Ngừng bán", "Stopped")</span>
-                            }
-                            else
-                            {
-                                <span class="badge bs-badge-instock">@ViewText.T("Đang bán", "Active")</span>
-                            }
-                        </h2>
-                    </div>
-
-                    <form method="get"
-                          action="/admin/kho/@inv.BookId/lich-su"
-                          data-admin-filter-form="true"
-                          class="d-flex align-items-center gap-2">
-                        @if (!string.IsNullOrWhiteSpace(q.Search))
-                        {
-                            <input type="hidden" name="Search" value="@q.Search" />
-                        }
-                        <label for="history-pagesize" class="form-label small fw-semibold mb-0 text-nowrap">
-                            @ViewText.T("Số dòng/trang:", "Per page:")
-                        </label>
-                        <select id="history-pagesize" name="PageSize" class="form-select form-select-sm" data-auto-submit="true">
-                            @if (!presetPageSizes.Contains(q.PageSize))
-                            {
-                                <option value="@q.PageSize" selected>@q.PageSize</option>
-                            }
-                            @foreach (var size in presetPageSizes)
-                            {
-                                if (q.PageSize == size)
-                                {
-                                    <option value="@size" selected>@size</option>
-                                }
-                                else
-                                {
-                                    <option value="@size">@size</option>
-                                }
-                            }
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                            @ViewText.T("Áp dụng", "Apply")
-                        </button>
-                    </form>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-12 col-sm-4">
-                        <div class="bs-stock-pill h-100">
-                            <div class="small text-secondary">@ViewText.T("Tồn thực tế hiện tại", "Current Physical Stock")</div>
-                            <div class="fs-4 fw-bold">@inv.Quantity</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="bs-stock-pill h-100">
-                            <div class="small text-secondary">@ViewText.T("Đang giữ chỗ hiện tại", "Current Reserved Stock")</div>
-                            <div class="fs-4 fw-bold text-secondary">@inv.ReservedQuantity</div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-4">
-                        <div class="bs-stock-pill h-100">
-                            <div class="small text-secondary">@ViewText.T("Khả dụng hiện tại", "Current Available Stock")</div>
-                            <div class="fs-4 fw-bold @(inv.AvailableQuantity > 0 ? "text-success" : "text-danger")">@inv.AvailableQuantity</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="card bs-surface-card" aria-label="@ViewText.T("Bảng lịch sử giao dịch kho", "Inventory transactions table")">
-            <div class="card-body p-0">
-                @if (Model.History.Items.Count == 0)
-                {
-                    <div class="p-4 p-lg-5 text-center">
-                        <h2 class="h5 bs-serif-heading mb-2">
-                            @ViewText.T("Chưa có biến động kho nào được ghi nhận", "No inventory movements recorded yet")
-                        </h2>
-                        <p class="text-secondary small mb-3">
-                            @ViewText.T(
-                                "Các lần nhập kho hoặc biến động từ đơn hàng của đầu sách này sẽ xuất hiện tại đây.",
-                                "Stock imports and order-driven movements for this book will appear here.")
-                        </p>
-                        <a href="/admin/kho/@inv.BookId/nhap" class="btn btn-sm bs-btn-primary">
-                            @ViewText.T("Nhập kho lần đầu", "Import Initial Stock")
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    <div class="bs-admin-table-wrap">
-                        <table class="table table-hover bs-admin-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>@ViewText.T("Thời điểm (UTC+7)", "Timestamp (UTC+7)")</th>
-                                    <th>@ViewText.T("Loại biến động", "Transaction Type")</th>
-                                    <th class="text-end">@ViewText.T("Biến động tồn", "Qty Delta")</th>
-                                    <th class="text-end">@ViewText.T("Tồn (Trước / Sau)", "Qty (Before / After)")</th>
-                                    <th class="text-end">@ViewText.T("Biến động giữ chỗ", "Res. Delta")</th>
-                                    <th class="text-end">@ViewText.T("Giữ chỗ (Trước / Sau)", "Res. (Before / After)")</th>
-                                    <th>@ViewText.T("Người thực hiện", "Actor")</th>
-                                    <th>@ViewText.T("Chứng từ / Đơn hàng", "Reference / Order")</th>
-                                    <th>@ViewText.T("Lý do", "Reason")</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.History.Items)
-                                {
-                                    <tr>
-                                        <td class="text-nowrap small">@ViewText.FormatVietnamTime(item.CreatedAt)</td>
-                                        <td class="text-nowrap">
-                                            <span class="badge text-bg-light border">@FormatTypeLabel(item.Type)</span>
-                                        </td>
-                                        <td class="text-end text-nowrap @DeltaCssClass(item.QuantityDelta)">
-                                            @FormatDelta(item.QuantityDelta)
-                                        </td>
-                                        <td class="text-end text-nowrap">
-                                            <span class="text-secondary">@item.QuantityBefore</span>
-                                            <span class="text-muted mx-1">/</span>
-                                            <span class="fw-semibold">@item.QuantityAfter</span>
-                                        </td>
-                                        <td class="text-end text-nowrap @DeltaCssClass(item.ReservedDelta)">
-                                            @FormatDelta(item.ReservedDelta)
-                                        </td>
-                                        <td class="text-end text-nowrap">
-                                            <span class="text-secondary">@item.ReservedBefore</span>
-                                            <span class="text-muted mx-1">/</span>
-                                            <span class="fw-semibold">@item.ReservedAfter</span>
-                                        </td>
-                                        <td class="text-nowrap"><code>@item.ActorUserName</code></td>
-                                        <td class="text-nowrap">
-                                            @if (!string.IsNullOrWhiteSpace(item.Reference))
-                                            {
-                                                <div><code>@item.Reference</code></div>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(item.OrderCode))
-                                            {
-                                                <div class="small text-secondary">@ViewText.T("Đơn:", "Order:") <code>@item.OrderCode</code></div>
-                                            }
-                                            @if (string.IsNullOrWhiteSpace(item.Reference) && string.IsNullOrWhiteSpace(item.OrderCode))
-                                            {
-                                                <span class="text-muted small">&mdash;</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (!string.IsNullOrWhiteSpace(item.Reason))
-                                            {
-                                                <span class="small">@item.Reason</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted small">&mdash;</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-        </section>
-
-        @if (Model.History.TotalPages > 1)
+        else
         {
-            var currentPage = Model.History.Page;
-            var totalPages = Model.History.TotalPages;
-            var startPage = Math.Max(1, currentPage - 2);
-            var endPage = Math.Min(totalPages, currentPage + 2);
-
-            <nav class="mt-4" aria-label="@ViewText.T("Phân trang lịch sử biến động kho", "Inventory history pagination")">
-                <ul class="pagination justify-content-center flex-wrap mb-0">
-                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
-                           tabindex="@(currentPage <= 1 ? "-1" : null)"
-                           aria-disabled="@(currentPage <= 1 ? "true" : null)">
-                            @ViewText.T("Trước", "Previous")
-                        </a>
-                    </li>
-
-                    @if (startPage > 1)
-                    {
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                        </li>
-                        @if (startPage > 2)
+            <div class="bs-admin-table-wrap">
+                <table class="table table-hover bs-admin-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>@ViewText.T("Thời gian (UTC+7)", "Timestamp (UTC+7)")</th>
+                            <th>@ViewText.T("Loại giao dịch", "Type")</th>
+                            <th class="text-end">@ViewText.T("Tồn (Trước -> Sau)", "Physical (Before -> After)")</th>
+                            <th class="text-end">@ViewText.T("Giữ chỗ (Trước -> Sau)", "Reserved (Before -> After)")</th>
+                            <th>@ViewText.T("Người thực hiện", "Actor")</th>
+                            <th>@ViewText.T("Tham chiếu / Đơn", "Reference / Order")</th>
+                            <th>@ViewText.T("Lý do / Ghi chú", "Reason")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.History.Items)
                         {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            var typeMeta = FormatTransactionType(item.Type);
+                            <tr>
+                                <td class="text-nowrap small bs-tabular">
+                                    @ViewText.FormatVietnamTime(item.CreatedAt)
+                                </td>
+                                <td class="text-nowrap">
+                                    <span class="badge @typeMeta.BadgeClass">@typeMeta.Label</span>
+                                </td>
+                                <td class="text-end text-nowrap bs-tabular">
+                                    <span class="fw-bold @(item.QuantityDelta > 0 ? "text-success" : item.QuantityDelta < 0 ? "text-danger" : "text-secondary")">
+                                        @FormatDelta(item.QuantityDelta)
+                                    </span>
+                                    <span class="small text-secondary ms-1">
+                                        (@item.QuantityBefore &rarr; <strong>@item.QuantityAfter</strong>)
+                                    </span>
+                                </td>
+                                <td class="text-end text-nowrap bs-tabular">
+                                    <span class="fw-bold @(item.ReservedDelta > 0 ? "text-warning" : item.ReservedDelta < 0 ? "text-info" : "text-secondary")">
+                                        @FormatDelta(item.ReservedDelta)
+                                    </span>
+                                    <span class="small text-secondary ms-1">
+                                        (@item.ReservedBefore &rarr; <strong>@item.ReservedAfter</strong>)
+                                    </span>
+                                </td>
+                                <td class="text-nowrap"><code>@item.ActorUserName</code></td>
+                                <td class="text-nowrap">
+                                    @if (!string.IsNullOrWhiteSpace(item.Reference))
+                                    {
+                                        <div><code>@item.Reference</code></div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.OrderCode))
+                                    {
+                                        <div class="small text-secondary">@ViewText.T("Đơn:", "Order:") <code>@item.OrderCode</code></div>
+                                    }
+                                    @if (string.IsNullOrWhiteSpace(item.Reference) && string.IsNullOrWhiteSpace(item.OrderCode))
+                                    {
+                                        <span class="text-muted small">&mdash;</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(item.Reason))
+                                    {
+                                        <span class="small">@item.Reason</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">&mdash;</span>
+                                    }
+                                </td>
+                            </tr>
                         }
-                    }
-
-                    @for (var p = startPage; p <= endPage; p++)
-                    {
-                        <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
-                            <a class="page-link" href="@BuildPageUrl(p)">@p</a>
-                        </li>
-                    }
-
-                    @if (endPage < totalPages)
-                    {
-                        @if (endPage < totalPages - 1)
-                        {
-                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                        }
-                        <li class="page-item">
-                            <a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a>
-                        </li>
-                    }
-
-                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                           href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
-                           tabindex="@(currentPage >= totalPages ? "-1" : null)"
-                           aria-disabled="@(currentPage >= totalPages ? "true" : null)">
-                            @ViewText.T("Tiếp", "Next")
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+                    </tbody>
+                </table>
+            </div>
         }
     </div>
-</div>
+</section>
 
-@section Scripts {
-    <script src="/js/admin.js"></script>
+@if (Model.History.TotalPages > 1)
+{
+    var currentPage = Model.History.Page;
+    var totalPages = Model.History.TotalPages;
+    var startPage = Math.Max(1, currentPage - 2);
+    var endPage = Math.Min(totalPages, currentPage + 2);
+
+    <nav class="mt-4" aria-label="@ViewText.T("Phân trang lịch sử biến động kho", "Inventory history pagination")">
+        <ul class="pagination justify-content-center flex-wrap mb-0">
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
+                   tabindex="@(currentPage <= 1 ? "-1" : null)"
+                   aria-disabled="@(currentPage <= 1 ? "true" : null)">
+                    @ViewText.T("Trước", "Previous")
+                </a>
+            </li>
+
+            @if (startPage > 1)
+            {
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
+                @if (startPage > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+            }
+
+            @for (var p = startPage; p <= endPage; p++)
+            {
+                <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
+                    <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                </li>
+            }
+
+            @if (endPage < totalPages)
+            {
+                @if (endPage < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                }
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
+            }
+
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link"
+                   href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
+                   tabindex="@(currentPage >= totalPages ? "-1" : null)"
+                   aria-disabled="@(currentPage >= totalPages ? "true" : null)">
+                    @ViewText.T("Tiếp", "Next")
+                </a>
+            </li>
+        </ul>
+    </nav>
 }

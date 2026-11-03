@@ -1,12 +1,9 @@
 @model CheckoutViewModel
 @{
-    ViewData["Title"] = ViewText.T("Đặt hàng (COD)", "Checkout (COD)");
+    ViewData["Title"] = ViewText.T("Đặt hàng", "Checkout");
     var cart = Model.Cart;
-    var hasPriceChanged = cart.Items.Any(x => x.PriceChanged);
-    var warningItems = cart.Items.Where(x => !string.IsNullOrWhiteSpace(x.Warning)).ToList();
-    var needsReconfirmBanner = Context.Response.StatusCode >= 400
-        && ViewData.ModelState.IsValid
-        && string.IsNullOrWhiteSpace(ViewData["ErrorCode"] as string);
+    var errorCode = ViewData["ErrorCode"] as string;
+    var isQuoteChanged = string.Equals(errorCode, "CHECKOUT_QUOTE_CHANGED", StringComparison.OrdinalIgnoreCase);
 }
 
 <nav aria-label="breadcrumb" class="mb-3">
@@ -19,47 +16,30 @@
 
 <div id="bs-checkout-page" data-cart-item-count="@cart.ItemCount">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h1 class="h3 bs-serif-heading mb-1">
-                @ViewText.T("Xác nhận đặt hàng", "Confirm Your Order")
-            </h1>
-            <p class="text-secondary small mb-0">
-                @ViewText.T(
-                    "Kiểm tra thông tin người nhận, xác nhận báo giá hiện tại và đặt hàng thanh toán khi nhận hàng (COD).",
-                    "Verify recipient details, confirm the current quotation, and place your Cash on Delivery (COD) order.")
-            </p>
-        </div>
+        <h1 class="h4 bs-serif-heading fw-bold mb-0">
+            @ViewText.T("Xác nhận đặt hàng", "Checkout & Order Confirmation")
+        </h1>
         <a href="/gio-hang" class="btn btn-sm btn-outline-secondary">
             &larr; @ViewText.T("Quay lại giỏ hàng", "Back to Cart")
         </a>
     </div>
 
-    @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Chưa thể tạo đơn hàng. Vui lòng kiểm tra lại báo giá hoặc thông tin nhận hàng:", "Unable to place order. Please review the updated quotation or recipient details:"))
-
-    @if (needsReconfirmBanner)
-    {
-        <div class="alert alert-danger small mb-4" role="alert">
-            <strong>@ViewText.T("Cần xác nhận báo giá & COD:", "Quotation & COD confirmation required:")</strong>
-            @ViewText.T(
-                "Báo giá vừa được làm mới hoặc bạn chưa tích ô xác nhận. Hãy kiểm tra lại tổng tiền và tích chọn ô xác nhận báo giá COD trước khi đặt hàng.",
-                "The quotation was refreshed or the confirmation box was not checked. Review the total amount and check the COD confirmation box before placing your order.")
-        </div>
-    }
+    @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Chưa thể hoàn tất đặt hàng. Vui lòng kiểm tra thông báo bên dưới:", "Could not place your order. Please review the details below:"))
 
     @if (cart.Items.Count == 0)
     {
-        <section class="card bs-surface-card">
-            <div class="card-body p-4 p-lg-5 text-center">
-                <h2 class="h5 bs-serif-heading mb-2">
-                    @ViewText.T("Giỏ hàng trống — không có sách để đặt", "Your cart is empty — no items to order")
-                </h2>
-                <p class="text-secondary small mb-3">
-                    @ViewText.T("Hãy thêm sách vào giỏ hàng trước khi tiến hành đặt hàng.", "Add books to your cart before proceeding to checkout.")
-                </p>
-                <a href="/sach" class="btn bs-btn-primary">
-                    @ViewText.T("Xem danh mục sách", "Browse Catalog")
-                </a>
-            </div>
+        <section class="bs-empty-state">
+            <h2 class="h5 fw-bold mb-2">
+                @ViewText.T("Giỏ hàng của bạn đang trống", "Your cart is empty")
+            </h2>
+            <p class="text-secondary small mb-3">
+                @ViewText.T(
+                    "Vui lòng thêm sách vào giỏ trước khi tiến hành đặt hàng.",
+                    "Please add books to your cart before proceeding to checkout.")
+            </p>
+            <a href="/sach" class="btn bs-btn-primary px-4">
+                @ViewText.T("Khám phá danh mục sách", "Browse Catalog")
+            </a>
         </section>
     }
     else
@@ -69,103 +49,93 @@
               asp-antiforgery="true"
               data-prevent-double-submit="true"
               novalidate>
-            @* Always emit the server's latest signed QuoteToken rather than stale ModelState *@
-            <input type="hidden" id="Input_QuoteToken" name="Input.QuoteToken" value="@Model.Input.QuoteToken" />
-            <span asp-validation-for="Input.QuoteToken" class="text-danger small d-block mb-2"></span>
+            <input type="hidden" name="Input.QuoteToken" value="@Model.Input.QuoteToken" />
 
             <div class="row g-4">
                 <div class="col-12 col-lg-7">
                     <section class="card bs-surface-card mb-4" aria-labelledby="checkout-recipient-heading">
                         <div class="card-body p-4">
-                            <h2 id="checkout-recipient-heading" class="h5 bs-serif-heading mb-3">
-                                @ViewText.T("Thông tin người nhận", "Recipient Information")
+                            <h2 id="checkout-recipient-heading" class="h6 fw-bold mb-3">
+                                @ViewText.T("1. Thông tin người nhận", "1. Recipient Information")
                             </h2>
 
-                            <div class="mb-3">
-                                <label asp-for="Input.RecipientName" class="form-label fw-semibold">
-                                    @ViewText.T("Tên người nhận", "Recipient Name") <span class="text-danger">*</span>
-                                </label>
-                                <input asp-for="Input.RecipientName"
-                                       class="form-control"
-                                       maxlength="100"
-                                       autocomplete="name"
-                                       required />
-                                <span asp-validation-for="Input.RecipientName" class="text-danger small"></span>
-                            </div>
-
-                            <div class="mb-3">
-                                <label asp-for="Input.Phone" class="form-label fw-semibold">
-                                    @ViewText.T("Số điện thoại liên hệ", "Phone Number") <span class="text-danger">*</span>
-                                </label>
-                                <input asp-for="Input.Phone"
-                                       type="tel"
-                                       class="form-control"
-                                       maxlength="20"
-                                       autocomplete="tel"
-                                       placeholder="@ViewText.T("VD: 0912345678", "e.g. +84 912 345 678")"
-                                       required />
-                                <span asp-validation-for="Input.Phone" class="text-danger small"></span>
-                            </div>
-
-                            <div class="mb-3">
-                                <label asp-for="Input.ShippingAddress" class="form-label fw-semibold">
-                                    @ViewText.T("Địa chỉ giao hàng", "Shipping Address") <span class="text-danger">*</span>
-                                </label>
-                                <textarea asp-for="Input.ShippingAddress"
-                                          class="form-control"
-                                          rows="3"
-                                          maxlength="255"
-                                          autocomplete="street-address"
-                                          placeholder="@ViewText.T("Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố...", "Street address, ward, district, city...")"
-                                          required></textarea>
-                                <span asp-validation-for="Input.ShippingAddress" class="text-danger small"></span>
-                            </div>
-
-                            <div class="mb-0">
-                                <label asp-for="Input.Note" class="form-label fw-semibold">
-                                    @ViewText.T("Ghi chú giao hàng (tùy chọn)", "Delivery Note (optional)")
-                                </label>
-                                <textarea asp-for="Input.Note"
-                                          class="form-control"
-                                          rows="2"
-                                          maxlength="500"
-                                          placeholder="@ViewText.T("Khung giờ nhận thuận tiện, hướng dẫn giao hàng...", "Preferred delivery hours or instructions...")"></textarea>
-                                <div class="form-text small">
-                                    @ViewText.T("Tối đa 500 ký tự.", "Up to 500 characters.")
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.RecipientName" class="form-label fw-semibold">
+                                        @ViewText.T("Họ và tên người nhận", "Recipient Full Name") <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Input.RecipientName"
+                                           class="form-control"
+                                           maxlength="100"
+                                           autocomplete="name"
+                                           required />
+                                    <span asp-validation-for="Input.RecipientName" class="text-danger small"></span>
                                 </div>
-                                <span asp-validation-for="Input.Note" class="text-danger small"></span>
+
+                                <div class="col-12 col-md-6">
+                                    <label asp-for="Input.Phone" class="form-label fw-semibold">
+                                        @ViewText.T("Số điện thoại liên hệ", "Phone Number") <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="Input.Phone"
+                                           class="form-control bs-tabular"
+                                           maxlength="20"
+                                           autocomplete="tel"
+                                           placeholder="0901234567"
+                                           required />
+                                    <span asp-validation-for="Input.Phone" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Input.ShippingAddress" class="form-label fw-semibold">
+                                        @ViewText.T("Địa chỉ giao hàng", "Shipping Address") <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea asp-for="Input.ShippingAddress"
+                                              class="form-control"
+                                              rows="2"
+                                              maxlength="255"
+                                              placeholder="@ViewText.T("Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố...", "Street address, ward, district, city/province...")"
+                                              required></textarea>
+                                    <span asp-validation-for="Input.ShippingAddress" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Input.Note" class="form-label fw-semibold">
+                                        @ViewText.T("Ghi chú giao hàng (tùy chọn)", "Delivery Note (optional)")
+                                    </label>
+                                    <textarea asp-for="Input.Note"
+                                              class="form-control"
+                                              rows="2"
+                                              maxlength="500"
+                                              placeholder="@ViewText.T("Hướng dẫn thời gian nhận hàng hoặc ghi chú cho bưu tá...", "Optional delivery instructions...")"></textarea>
+                                    <span asp-validation-for="Input.Note" class="text-danger small"></span>
+                                </div>
                             </div>
                         </div>
                     </section>
 
                     <section class="card bs-surface-card" aria-labelledby="checkout-payment-heading">
                         <div class="card-body p-4">
-                            <h2 id="checkout-payment-heading" class="h5 bs-serif-heading mb-3">
-                                @ViewText.T("Hình thức thanh toán", "Payment Method")
+                            <h2 id="checkout-payment-heading" class="h6 fw-bold mb-3">
+                                @ViewText.T("2. Phương thức thanh toán & Xác nhận báo giá", "2. Payment Method & Quotation Confirmation")
                             </h2>
 
-                            <div class="form-check p-3 ps-5 rounded-3 border bg-light-subtle mb-3">
-                                <input class="form-check-input"
-                                       type="radio"
-                                       id="payment-method-cod"
-                                       name="PaymentMethodDisplay"
-                                       value="COD"
-                                       checked
-                                       disabled />
-                                <label class="form-check-label fw-semibold text-dark opacity-100" for="payment-method-cod">
-                                    @ViewText.T(
-                                        "Thanh toán khi nhận hàng (COD) — Phí giao hàng: 0 đ",
-                                        "Cash on Delivery (COD) — Shipping fee: 0 đ")
-                                </label>
+                            <div class="p-3 rounded-2 border bg-light mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">
+                                        @ViewText.T("Thanh toán khi nhận hàng (COD)", "Cash on Delivery (COD)")
+                                    </span>
+                                    <span class="badge bs-badge-instock">
+                                        @ViewText.T("Miễn phí giao hàng (0 đ)", "Free shipping (0 đ)")
+                                    </span>
+                                </div>
                                 <div class="small text-secondary mt-1">
                                     @ViewText.T(
-                                        "Phương thức duy nhất hiện hỗ trợ. Bạn thanh toán trực tiếp bằng tiền mặt đúng số tiền trên đơn khi nhận sách.",
-                                        "Only supported payment method. Pay the exact order total upon receiving your books.")
+                                        "Thanh toán tiền mặt trực tiếp cho nhân viên giao hàng khi nhận sách.",
+                                        "Pay cash directly to the courier upon receiving your books.")
                                 </div>
                             </div>
 
-                            <div class="form-check p-3 ps-5 rounded-3 border border-success-subtle bg-white">
-                                @* Bind checked directly to Model.Input.ConfirmQuote so quote resets always clear the checkbox *@
+                            <div class="form-check p-3 ps-5 rounded-2 border @(isQuoteChanged ? "border-warning bg-warning-subtle" : "bg-light")">
                                 <input class="form-check-input"
                                        type="checkbox"
                                        id="Input_ConfirmQuote"
@@ -175,8 +145,8 @@
                                        required />
                                 <label class="form-check-label fw-semibold" for="Input_ConfirmQuote">
                                     @ViewText.T(
-                                        $"Tôi xác nhận đồng ý báo giá hiện tại ({ViewText.FormatVnd(cart.TotalAmount)}, phí giao hàng 0 đ) và đặt mua theo hình thức COD.",
-                                        $"I confirm the current quotation ({ViewText.FormatVnd(cart.TotalAmount)}, 0 đ shipping) and agree to place this COD order.")
+                                        $"Tôi đã kiểm tra danh sách sách, đồng ý với báo giá tổng cộng {ViewText.FormatVnd(cart.TotalAmount)} và xác nhận đặt hàng thanh toán COD.",
+                                        $"I have reviewed the order items, agree to the quotation total of {ViewText.FormatVnd(cart.TotalAmount)}, and confirm Cash on Delivery (COD).")
                                 </label>
                                 <input type="hidden" name="Input.ConfirmQuote" value="false" />
                                 <span asp-validation-for="Input.ConfirmQuote" class="text-danger small d-block mt-1"></span>
@@ -186,31 +156,23 @@
                 </div>
 
                 <div class="col-12 col-lg-5">
-                    <section class="card bs-surface-card" aria-labelledby="checkout-summary-heading">
+                    <section class="card bs-surface-card bs-cart-summary-card bs-cart-summary-sticky" aria-labelledby="checkout-quote-heading">
                         <div class="card-body p-4">
-                            <h2 id="checkout-summary-heading" class="h5 bs-serif-heading mb-3">
-                                @ViewText.T("Tóm tắt đơn hàng", "Order Summary")
-                            </h2>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 id="checkout-quote-heading" class="h6 fw-bold mb-0">
+                                    @ViewText.T("Đơn hàng của bạn", "Order Summary")
+                                </h2>
+                                <span class="badge bs-badge-category bs-tabular">
+                                    @cart.ItemCount @ViewText.T("cuốn", "items")
+                                </span>
+                            </div>
 
-                            @if (hasPriceChanged || warningItems.Count > 0)
+                            @if (isQuoteChanged)
                             {
-                                <div class="alert alert-warning small mb-3" role="status">
-                                    <div class="fw-semibold mb-1">
-                                        @ViewText.T(
-                                            "Thông báo cập nhật báo giá / tồn kho:",
-                                            "Updated quotation / stock notice:")
-                                    </div>
-                                    <ul class="mb-1 ps-3">
-                                        @foreach (var w in warningItems)
-                                        {
-                                            <li><strong>@w.Title:</strong> @w.Warning</li>
-                                        }
-                                    </ul>
-                                    <div>
-                                        @ViewText.T(
-                                            "Báo giá đã được làm mới. Hãy kiểm tra kỹ và tích lại ô xác nhận báo giá trước khi gửi.",
-                                            "The quotation has been refreshed. Review the updated totals and re-check the confirmation box before submitting.")
-                                    </div>
+                                <div class="alert alert-warning small py-2 px-3 mb-3">
+                                    @ViewText.T(
+                                        "Báo giá đã được làm mới. Hãy kiểm tra kỹ và tích lại ô xác nhận báo giá trước khi đặt hàng.",
+                                        "The quotation has been refreshed. Review the updated totals and re-check the confirmation box before submitting.")
                                 </div>
                             }
 
@@ -221,7 +183,7 @@
                                         <div class="d-flex justify-content-between align-items-start gap-2">
                                             <div class="min-w-0">
                                                 <div class="fw-semibold small bs-wrap-anywhere">@line.Title</div>
-                                                <div class="small text-secondary">
+                                                <div class="small text-secondary bs-tabular">
                                                     <code>@line.SKU</code> &middot; @ViewText.FormatVnd(line.UnitPrice) &times; @line.Quantity
                                                 </div>
                                                 @if (!line.IsAvailable)
@@ -231,7 +193,7 @@
                                                     </span>
                                                 }
                                             </div>
-                                            <div class="fw-semibold small text-nowrap">
+                                            <div class="fw-semibold small text-nowrap bs-tabular">
                                                 @ViewText.FormatVnd(line.LineTotal)
                                             </div>
                                         </div>
@@ -239,11 +201,11 @@
                                 }
                             </ul>
 
-                            <div class="d-flex justify-content-between small mb-2">
+                            <div class="d-flex justify-content-between small mb-2 bs-tabular">
                                 <span class="text-secondary">@ViewText.T("Tạm tính:", "Subtotal:")</span>
                                 <span>@ViewText.FormatVnd(cart.Subtotal)</span>
                             </div>
-                            <div class="d-flex justify-content-between small mb-2">
+                            <div class="d-flex justify-content-between small mb-2 bs-tabular">
                                 <span class="text-secondary">@ViewText.T("Phí giao hàng:", "Shipping fee:")</span>
                                 <span>@ViewText.FormatVnd(cart.ShippingFee)</span>
                             </div>
@@ -252,7 +214,7 @@
                                 <span class="fw-semibold">COD</span>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mb-3 bs-tabular">
                                 <span class="fw-bold">@ViewText.T("Tổng cộng:", "Total:")</span>
                                 <span class="fs-4 fw-bold bs-price-current">@ViewText.FormatVnd(cart.TotalAmount)</span>
                             </div>
@@ -268,7 +230,7 @@
 
                             <div class="d-grid gap-2">
                                 <button type="submit"
-                                        class="btn bs-btn-primary py-2"
+                                        class="btn bs-btn-primary py-2 fw-semibold"
                                         disabled="@(!cart.CanCheckout ? "disabled" : null)">
                                     @ViewText.T("Đặt hàng", "Place Order")
                                 </button>

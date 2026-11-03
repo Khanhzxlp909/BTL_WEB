@@ -1,105 +1,63 @@
 @model CategoryFormViewModel
 @{
+    Layout = "_AdminLayout";
     var isEdit = Model.Id.HasValue;
     ViewData["Title"] = isEdit
         ? ViewText.T($"Chỉnh sửa thể loại #{Model.Id!.Value}", $"Edit Category #{Model.Id!.Value}")
         : ViewText.T("Thêm thể loại mới", "Add New Category");
     var formAction = isEdit ? $"/admin/the-loai/{Model.Id!.Value}/sua" : "/admin/the-loai/them";
-    var errorCode = ViewData["ErrorCode"] as string;
-    var traceId = ViewData["TraceId"] as string;
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/the-loai" class="btn btn-sm btn-outline-secondary">
+        &larr; @ViewText.T("Danh sách thể loại", "Back to Categories")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h1 class="h3 bs-serif-heading mb-1">@ViewData["Title"]</h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        "Tên thể loại phải là duy nhất trên toàn hệ thống (không trùng với cả thể loại đã xóa mềm).",
-                        "Category names must be unique across the entire system (including soft-deleted categories).")
-                </p>
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể lưu thể loại. Vui lòng kiểm tra các trường bên dưới:", "Unable to save category. Please review the fields below:"))
+
+<section class="card bs-surface-card">
+    <div class="card-body p-4">
+        <form method="post"
+              action="@formAction"
+              asp-antiforgery="true"
+              data-prevent-double-submit="true"
+              novalidate>
+            <div class="mb-3">
+                <label asp-for="Input.Name" class="form-label fw-semibold">
+                    @ViewText.T("Tên thể loại", "Category Name") <span class="text-danger">*</span>
+                </label>
+                <input asp-for="Input.Name"
+                       class="form-control"
+                       maxlength="100"
+                       required />
+                <span asp-validation-for="Input.Name" class="text-danger small"></span>
             </div>
-            <a href="/admin/the-loai" class="btn btn-sm btn-outline-secondary">
-                @ViewText.T("Quay về danh sách thể loại", "Back to Categories")
-            </a>
-        </div>
 
-        @if (!ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode))
-        {
-            <div class="alert alert-danger" role="alert">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                    <strong>@ViewText.T("Không thể lưu thể loại. Vui lòng kiểm tra các trường bên dưới:", "Unable to save category. Please review the fields below:")</strong>
-                    @if (!string.IsNullOrWhiteSpace(errorCode))
-                    {
-                        <code class="bs-error-code">@errorCode</code>
-                    }
+            <div class="mb-4">
+                <label asp-for="Input.Description" class="form-label fw-semibold">
+                    @ViewText.T("Mô tả thể loại", "Description")
+                </label>
+                <textarea asp-for="Input.Description"
+                          class="form-control"
+                          maxlength="1000"
+                          rows="4"></textarea>
+                <div class="form-text small">
+                    @ViewText.T("Tối đa 1000 ký tự.", "Up to 1000 characters.")
                 </div>
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="small mb-0"></div>
-                }
-                @if (!string.IsNullOrWhiteSpace(traceId))
-                {
-                    <div class="small text-secondary mt-2">
-                        @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
-                    </div>
-                }
+                <span asp-validation-for="Input.Description" class="text-danger small"></span>
             </div>
-        }
 
-        <section class="card bs-surface-card">
-            <div class="card-body p-4">
-                <form method="post"
-                      action="@formAction"
-                      asp-antiforgery="true"
-                      data-prevent-double-submit="true"
-                      novalidate>
-                    <div class="mb-3">
-                        <label asp-for="Input.Name" class="form-label fw-semibold">
-                            @ViewText.T("Tên thể loại", "Category Name") <span class="text-danger">*</span>
-                        </label>
-                        <input asp-for="Input.Name"
-                               class="form-control"
-                               maxlength="100"
-                               required />
-                        <span asp-validation-for="Input.Name" class="text-danger small"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label asp-for="Input.Description" class="form-label fw-semibold">
-                            @ViewText.T("Mô tả thể loại", "Description")
-                        </label>
-                        <textarea asp-for="Input.Description"
-                                  class="form-control"
-                                  maxlength="1000"
-                                  rows="4"></textarea>
-                        <div class="form-text small">
-                            @ViewText.T("Tối đa 1000 ký tự.", "Up to 1000 characters.")
-                        </div>
-                        <span asp-validation-for="Input.Description" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3">
-                        <a href="/admin/the-loai" class="btn btn-outline-secondary">
-                            @ViewText.T("Hủy", "Cancel")
-                        </a>
-                        <button type="submit" class="btn bs-btn-primary px-4">
-                            @(isEdit
-                                ? ViewText.T("Lưu thay đổi", "Save Changes")
-                                : ViewText.T("Tạo thể loại", "Create Category"))
-                        </button>
-                    </div>
-                </form>
+            <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3">
+                <a href="/admin/the-loai" class="btn btn-outline-secondary">
+                    @ViewText.T("Hủy", "Cancel")
+                </a>
+                <button type="submit" class="btn bs-btn-primary px-4">
+                    @(isEdit
+                        ? ViewText.T("Lưu thay đổi", "Save Changes")
+                        : ViewText.T("Tạo thể loại", "Create Category"))
+                </button>
             </div>
-        </section>
+        </form>
     </div>
-</div>
-
-@section Scripts {
-    <script src="/js/admin.js"></script>
-}
+</section>

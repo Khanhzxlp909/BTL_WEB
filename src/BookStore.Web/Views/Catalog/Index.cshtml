@@ -1,6 +1,6 @@
 @model CatalogViewModel
 @{
-    ViewData["Title"] = ViewText.T("Danh sách sách", "Book Catalog");
+    ViewData["Title"] = ViewText.T("Danh mục sách", "Book Catalog");
     var q = Model.Query;
     var minPriceValue = q.MinPrice.HasValue ? decimal.Truncate(q.MinPrice.Value).ToString(CultureInfo.InvariantCulture) : "";
     var maxPriceValue = q.MaxPrice.HasValue ? decimal.Truncate(q.MaxPrice.Value).ToString(CultureInfo.InvariantCulture) : "";
@@ -43,251 +43,272 @@
     }
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
-    <div>
-        <h1 class="h3 bs-serif-heading mb-1">@ViewText.T("Danh mục sách", "Book Catalog")</h1>
-        <p class="text-secondary small mb-0">
-            @ViewText.T(
-                $"Tìm thấy {Model.Books.TotalItems} đầu sách phù hợp",
-                $"Showing {Model.Books.TotalItems} matching books")
-        </p>
-    </div>
-</div>
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Bộ lọc tìm kiếm chưa hợp lệ. Hãy kiểm tra các trường bên dưới:", "Invalid filter parameters. Please review the fields below:"))
 
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger" role="alert">
-        <div class="fw-semibold mb-1">
-            @ViewText.T("Bộ lọc tìm kiếm chưa hợp lệ. Hãy kiểm tra các trường bên dưới:", "Invalid filter parameters. Please review the fields below:")
-        </div>
-        <div asp-validation-summary="All" class="small mb-0"></div>
-    </div>
-}
-
-<section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Bộ lọc danh mục sách", "Catalog filter form")">
-    <div class="card-body p-3 p-lg-4">
-        <form id="catalog-filter-form" method="get" action="/sach" class="row g-3 align-items-end">
-            <div class="col-12 col-md-6 col-lg-4">
-                <label for="filter-search" class="form-label small fw-semibold">
-                    @ViewText.T("Từ khóa (Tên sách, tác giả, SKU, ISBN)", "Keyword (Title, author, SKU, ISBN)")
-                </label>
-                <input id="filter-search"
-                       type="search"
-                       name="Search"
-                       value="@q.Search"
-                       maxlength="255"
-                       class="form-control"
-                       placeholder="@ViewText.T("Nhập tên sách, tác giả, SKU hoặc ISBN...", "Enter title, author, SKU or ISBN...")" />
-                <span class="text-danger small">@Html.ValidationMessage("Search")</span>
+<div class="row g-4 align-items-start">
+    <aside class="col-12 col-lg-3">
+        <div class="offcanvas-lg offcanvas-start" tabindex="-1" id="catalogFilterOffcanvas" aria-labelledby="catalogFilterOffcanvasLabel">
+            <div class="offcanvas-header border-bottom d-lg-none">
+                <h2 class="h6 fw-bold mb-0" id="catalogFilterOffcanvasLabel">
+                    @ViewText.T("Bộ lọc tìm kiếm", "Filter Books")
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#catalogFilterOffcanvas" aria-label="@ViewText.T("Đóng", "Close")"></button>
             </div>
 
-            <div class="col-12 col-sm-6 col-md-6 col-lg-3">
-                <label for="filter-category" class="form-label small fw-semibold">
-                    @ViewText.T("Thể loại", "Category")
-                </label>
-                <select id="filter-category" name="CategoryId" class="form-select">
-                    <option value="">@ViewText.T("Tất cả thể loại", "All categories")</option>
-                    @foreach (var category in Model.Categories)
-                    {
-                        if (q.CategoryId == category.Id)
-                        {
-                            <option value="@category.Id" selected>@category.Name</option>
-                        }
-                        else
-                        {
-                            <option value="@category.Id">@category.Name</option>
-                        }
-                    }
-                </select>
-                <span class="text-danger small">@Html.ValidationMessage("CategoryId")</span>
-            </div>
+            <div class="offcanvas-body p-0">
+                <div class="card bs-surface-card bs-catalog-sidebar w-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                            <h2 class="h6 fw-bold mb-0">@ViewText.T("Bộ lọc sách", "Filters")</h2>
+                            <a href="/sach" class="small text-decoration-none">@ViewText.T("Đặt lại", "Reset")</a>
+                        </div>
 
-            <div class="col-6 col-sm-3 col-lg-2">
-                <label for="filter-min-price" class="form-label small fw-semibold">
-                    @ViewText.T("Giá từ (VND)", "Min price (VND)")
-                </label>
-                <input id="filter-min-price"
-                       type="number"
-                       name="MinPrice"
-                       value="@minPriceValue"
-                       min="0"
-                       step="1"
-                       inputmode="numeric"
-                       class="form-control"
-                       placeholder="0" />
-                <span class="text-danger small">@Html.ValidationMessage("MinPrice")</span>
-            </div>
+                        <form id="catalog-filter-form" method="get" action="/sach">
+                            <div class="mb-3">
+                                <label for="filter-search" class="form-label small fw-semibold mb-1">
+                                    @ViewText.T("Từ khóa", "Keyword")
+                                </label>
+                                <input id="filter-search"
+                                       type="search"
+                                       name="Search"
+                                       value="@q.Search"
+                                       maxlength="255"
+                                       class="form-control form-control-sm"
+                                       placeholder="@ViewText.T("Tên sách, tác giả, SKU, ISBN...", "Title, author, SKU, ISBN...")" />
+                                <span class="text-danger small">@Html.ValidationMessage("Search")</span>
+                            </div>
 
-            <div class="col-6 col-sm-3 col-lg-3">
-                <label for="filter-max-price" class="form-label small fw-semibold">
-                    @ViewText.T("Giá đến (VND)", "Max price (VND)")
-                </label>
-                <input id="filter-max-price"
-                       type="number"
-                       name="MaxPrice"
-                       value="@maxPriceValue"
-                       min="0"
-                       step="1"
-                       inputmode="numeric"
-                       class="form-control"
-                       placeholder="500000" />
-                <span class="text-danger small">@Html.ValidationMessage("MaxPrice")</span>
-            </div>
+                            <div class="mb-3">
+                                <label for="filter-category" class="form-label small fw-semibold mb-1">
+                                    @ViewText.T("Thể loại", "Category")
+                                </label>
+                                <select id="filter-category" name="CategoryId" class="form-select form-select-sm" data-auto-submit="true">
+                                    <option value="">@ViewText.T("Tất cả thể loại", "All categories")</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        if (q.CategoryId == category.Id)
+                                        {
+                                            <option value="@category.Id" selected>@category.Name</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <span class="text-danger small">@Html.ValidationMessage("CategoryId")</span>
+                            </div>
 
-            <div class="col-12 col-sm-6 col-lg-3">
-                <label for="filter-sort" class="form-label small fw-semibold">
-                    @ViewText.T("Sắp xếp theo", "Sort by")
-                </label>
-                <select id="filter-sort" name="Sort" class="form-select">
-                    <option value="newest" selected="@(q.Sort == "newest" ? "selected" : null)">
-                        @ViewText.T("Mới nhất", "Newest")
-                    </option>
-                    <option value="price-asc" selected="@(q.Sort == "price-asc" ? "selected" : null)">
-                        @ViewText.T("Giá tăng dần", "Price: Low to High")
-                    </option>
-                    <option value="price-desc" selected="@(q.Sort == "price-desc" ? "selected" : null)">
-                        @ViewText.T("Giá giảm dần", "Price: High to Low")
-                    </option>
-                    <option value="title" selected="@(q.Sort == "title" ? "selected" : null)">
-                        @ViewText.T("Tên sách (A-Z)", "Title (A-Z)")
-                    </option>
-                </select>
-                <span class="text-danger small">@Html.ValidationMessage("Sort")</span>
-            </div>
+                            <div class="mb-3">
+                                <div class="form-label small fw-semibold mb-1">
+                                    @ViewText.T("Khoảng giá (VND)", "Price range (VND)")
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label for="filter-min-price" class="visually-hidden">@ViewText.T("Giá từ", "Min price")</label>
+                                        <input id="filter-min-price"
+                                               type="number"
+                                               name="MinPrice"
+                                               value="@minPriceValue"
+                                               min="0"
+                                               step="1"
+                                               inputmode="numeric"
+                                               class="form-control form-control-sm"
+                                               placeholder="@ViewText.T("Từ", "Min")" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="filter-max-price" class="visually-hidden">@ViewText.T("Giá đến", "Max price")</label>
+                                        <input id="filter-max-price"
+                                               type="number"
+                                               name="MaxPrice"
+                                               value="@maxPriceValue"
+                                               min="0"
+                                               step="1"
+                                               inputmode="numeric"
+                                               class="form-control form-control-sm"
+                                               placeholder="@ViewText.T("Đến", "Max")" />
+                                    </div>
+                                </div>
+                                <span class="text-danger small d-block">@Html.ValidationMessage("MinPrice")</span>
+                                <span class="text-danger small d-block">@Html.ValidationMessage("MaxPrice")</span>
+                            </div>
 
-            <div class="col-6 col-sm-3 col-lg-2">
-                <label for="filter-pagesize" class="form-label small fw-semibold">
-                    @ViewText.T("Số mục / trang", "Items / page")
-                </label>
-                <select id="filter-pagesize" name="PageSize" class="form-select">
-                    @if (!presetPageSizes.Contains(q.PageSize) && q.PageSize is >= 1 and <= 100)
-                    {
-                        <option value="@q.PageSize" selected>@q.PageSize</option>
-                    }
-                    @foreach (var size in presetPageSizes)
-                    {
-                        <option value="@size" selected="@(q.PageSize == size ? "selected" : null)">@size</option>
-                    }
-                </select>
-                <span class="text-danger small">@Html.ValidationMessage("PageSize")</span>
-            </div>
+                            <div class="form-check mb-3">
+                                <input id="filter-instock"
+                                       class="form-check-input"
+                                       type="checkbox"
+                                       name="InStock"
+                                       value="true"
+                                       data-auto-submit="true"
+                                       checked="@(q.InStock ? "checked" : null)" />
+                                <label for="filter-instock" class="form-check-label small fw-medium">
+                                    @ViewText.T("Chỉ hiển thị sách còn hàng", "In-stock books only")
+                                </label>
+                            </div>
 
-            <div class="col-6 col-sm-3 col-lg-3">
-                <div class="form-check pt-2">
-                    <input id="filter-instock"
-                           type="checkbox"
-                           name="InStock"
-                           value="true"
-                           checked="@(q.InStock ? "checked" : null)"
-                           class="form-check-input" />
-                    <label for="filter-instock" class="form-check-label fw-medium">
-                        @ViewText.T("Chỉ hiện sách còn hàng", "In-stock books only")
-                    </label>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-sm bs-btn-primary">
+                                    @ViewText.T("Áp dụng bộ lọc", "Apply Filters")
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
+        </div>
+    </aside>
 
-            <div class="col-12 col-lg-4 d-flex gap-2 justify-content-lg-end">
-                <button type="submit" class="btn bs-btn-primary px-4">
-                    @ViewText.T("Áp dụng bộ lọc", "Apply filters")
+    <div class="col-12 col-lg-9">
+        <div class="bs-catalog-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary d-lg-none"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#catalogFilterOffcanvas"
+                        aria-controls="catalogFilterOffcanvas">
+                    @ViewText.T("Bộ lọc", "Filters")
                 </button>
-                <a href="/sach" class="btn btn-outline-secondary">
-                    @ViewText.T("Xóa lọc", "Reset")
+                <h1 class="h5 bs-serif-heading fw-bold mb-0 me-1">@ViewText.T("Danh mục sách", "Books")</h1>
+                <span class="badge bs-badge-category bs-tabular">
+                    @Model.Books.TotalItems @ViewText.T("kết quả", "results")
+                </span>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="d-flex align-items-center gap-1">
+                    <label for="filter-sort" class="small text-secondary text-nowrap mb-0">
+                        @ViewText.T("Sắp xếp:", "Sort:")
+                    </label>
+                    <select id="filter-sort"
+                            name="Sort"
+                            form="catalog-filter-form"
+                            data-auto-submit="true"
+                            class="form-select form-select-sm"
+                            style="width: auto;">
+                        <option value="newest" selected="@(q.Sort == "newest" ? "selected" : null)">
+                            @ViewText.T("Mới nhất", "Newest")
+                        </option>
+                        <option value="price-asc" selected="@(q.Sort == "price-asc" ? "selected" : null)">
+                            @ViewText.T("Giá tăng dần", "Price: Low to High")
+                        </option>
+                        <option value="price-desc" selected="@(q.Sort == "price-desc" ? "selected" : null)">
+                            @ViewText.T("Giá giảm dần", "Price: High to Low")
+                        </option>
+                        <option value="title" selected="@(q.Sort == "title" ? "selected" : null)">
+                            @ViewText.T("Tên sách (A-Z)", "Title (A-Z)")
+                        </option>
+                    </select>
+                </div>
+
+                <div class="d-flex align-items-center gap-1">
+                    <label for="filter-pagesize" class="small text-secondary text-nowrap mb-0">
+                        @ViewText.T("Hiển thị:", "Per page:")
+                    </label>
+                    <select id="filter-pagesize"
+                            name="PageSize"
+                            form="catalog-filter-form"
+                            data-auto-submit="true"
+                            class="form-select form-select-sm"
+                            style="width: auto;">
+                        @if (!presetPageSizes.Contains(q.PageSize))
+                        {
+                            <option value="@q.PageSize" selected>@q.PageSize</option>
+                        }
+                        @foreach (var size in presetPageSizes)
+                        {
+                            if (q.PageSize == size)
+                            {
+                                <option value="@size" selected>@size</option>
+                            }
+                            else
+                            {
+                                <option value="@size">@size</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Books.Items.Count == 0)
+        {
+            <div class="bs-empty-state">
+                <h2 class="h6 fw-bold mb-1">
+                    @ViewText.T("Không tìm thấy đầu sách phù hợp", "No matching books found")
+                </h2>
+                <p class="small text-secondary mb-3">
+                    @ViewText.T(
+                        "Hãy thử thay đổi từ khóa, mở rộng khoảng giá hoặc đặt lại bộ lọc.",
+                        "Try changing your keyword, widening the price range, or resetting the filters.")
+                </p>
+                <a href="/sach" class="btn btn-sm bs-btn-primary">
+                    @ViewText.T("Xem tất cả sách", "View All Books")
                 </a>
             </div>
-        </form>
-    </div>
-</section>
-
-@if (Model.Books.Items.Count == 0)
-{
-    <section class="card bs-surface-card">
-        <div class="card-body p-4 p-lg-5 text-center">
-            <h2 class="h5 bs-serif-heading mb-2">
-                @ViewText.T("Không tìm thấy đầu sách phù hợp", "No Matching Books Found")
-            </h2>
-            <p class="text-secondary mb-3">
-                @ViewText.T(
-                    "Thử điều chỉnh từ khóa tìm kiếm, nới rộng khoảng giá hoặc xem toàn bộ danh mục sách.",
-                    "Try adjusting your search keywords, widening the price filter, or browsing the full catalog.")
-            </p>
-            <a href="/sach" class="btn btn-outline-secondary">
-                @ViewText.T("Xem toàn bộ sách", "Reset all filters")
-            </a>
-        </div>
-    </section>
-}
-else
-{
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-4">
-        @foreach (var book in Model.Books.Items)
+        }
+        else
         {
-            <div class="col">
-                <partial name="_BookCard" model="book" />
+            <div class="bs-book-grid bs-book-grid-catalog">
+                @foreach (var book in Model.Books.Items)
+                {
+                    @await Html.PartialAsync("_BookCard", book)
+                }
             </div>
+
+            @if (Model.Books.TotalPages > 1)
+            {
+                var currentPage = Model.Books.Page;
+                var totalPages = Model.Books.TotalPages;
+                var startPage = Math.Max(1, currentPage - 2);
+                var endPage = Math.Min(totalPages, currentPage + 2);
+
+                <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh mục sách", "Catalog pagination")">
+                    <ul class="pagination justify-content-center flex-wrap mb-0">
+                        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
+                               tabindex="@(currentPage <= 1 ? "-1" : null)"
+                               aria-disabled="@(currentPage <= 1 ? "true" : null)">
+                                @ViewText.T("Trước", "Previous")
+                            </a>
+                        </li>
+
+                        @if (startPage > 1)
+                        {
+                            <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
+                            @if (startPage > 2)
+                            {
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            }
+                        }
+
+                        @for (var p = startPage; p <= endPage; p++)
+                        {
+                            <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
+                                <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                            </li>
+                        }
+
+                        @if (endPage < totalPages)
+                        {
+                            @if (endPage < totalPages - 1)
+                            {
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            }
+                            <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
+                               tabindex="@(currentPage >= totalPages ? "-1" : null)"
+                               aria-disabled="@(currentPage >= totalPages ? "true" : null)">
+                                @ViewText.T("Tiếp", "Next")
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
         }
     </div>
-
-    @if (Model.Books.TotalPages > 1)
-    {
-        var currentPage = Model.Books.Page;
-        var totalPages = Model.Books.TotalPages;
-        var startPage = Math.Max(1, currentPage - 2);
-        var endPage = Math.Min(totalPages, currentPage + 2);
-
-        <nav aria-label="@ViewText.T("Phân trang danh sách sách", "Book catalog pagination")" class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-            <div class="small text-secondary">
-                @ViewText.T(
-                    $"Trang {currentPage} / {totalPages} ({Model.Books.TotalItems} sách)",
-                    $"Page {currentPage} of {totalPages} ({Model.Books.TotalItems} books)")
-            </div>
-            <ul class="pagination pagination-sm mb-0 flex-wrap">
-                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                    <a class="page-link"
-                       href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
-                       tabindex="@(currentPage <= 1 ? "-1" : null)"
-                       aria-disabled="@(currentPage <= 1 ? "true" : null)">
-                        @ViewText.T("Trước", "Previous")
-                    </a>
-                </li>
-
-                @if (startPage > 1)
-                {
-                    <li class="page-item">
-                        <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                    </li>
-                    @if (startPage > 2)
-                    {
-                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                    }
-                }
-
-                @for (var p = startPage; p <= endPage; p++)
-                {
-                    <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
-                        <a class="page-link" href="@BuildPageUrl(p)">@p</a>
-                    </li>
-                }
-
-                @if (endPage < totalPages)
-                {
-                    @if (endPage < totalPages - 1)
-                    {
-                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
-                    }
-                    <li class="page-item">
-                        <a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a>
-                    </li>
-                }
-
-                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                    <a class="page-link"
-                       href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
-                       tabindex="@(currentPage >= totalPages ? "-1" : null)"
-                       aria-disabled="@(currentPage >= totalPages ? "true" : null)">
-                        @ViewText.T("Tiếp", "Next")
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    }
-}
+</div>

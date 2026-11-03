@@ -39,15 +39,15 @@
 
 @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Bộ lọc đơn hàng không hợp lệ. Hãy kiểm tra điều kiện lọc:", "Invalid order filter parameters. Check your filter values:"))
 
-<section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Bộ lọc đơn hàng", "Order filters")">
-    <div class="card-body p-3 p-lg-4">
+<section class="bs-filter-card mb-4" aria-label="@ViewText.T("Bộ lọc đơn hàng", "Order filters")">
+    <div class="p-3">
         <form method="get"
               action="@baseUrl"
               data-admin-filter-form="true"
               data-customer-filter-form="true"
               novalidate>
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-md-6 @(Model.IsAdmin ? "col-xl-3" : "col-xl-4")">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-sm-6 @(Model.IsAdmin ? "col-xl-3" : "col-xl-3")">
                     <label for="order-filter-search" class="form-label small fw-semibold mb-1">
                         @ViewText.T("Mã đơn hàng", "Order Code")
                     </label>
@@ -62,7 +62,7 @@
 
                 @if (Model.IsAdmin)
                 {
-                    <div class="col-12 col-md-6 col-xl-3">
+                    <div class="col-12 col-sm-6 col-xl-2">
                         <label for="order-filter-customer" class="form-label small fw-semibold mb-1">
                             @ViewText.T("Khách hàng", "Customer")
                         </label>
@@ -72,11 +72,11 @@
                                value="@q.Customer"
                                maxlength="100"
                                class="form-control form-control-sm"
-                               placeholder="@ViewText.T("Tên đăng nhập / người nhận...", "Username or recipient...")" />
+                               placeholder="@ViewText.T("Tài khoản / người nhận...", "Username or recipient...")" />
                     </div>
                 }
 
-                <div class="col-12 col-sm-6 @(Model.IsAdmin ? "col-xl-2" : "col-xl-3")">
+                <div class="col-6 col-sm-4 col-xl-2">
                     <label for="order-filter-status" class="form-label small fw-semibold mb-1">
                         @ViewText.T("Trạng thái", "Status")
                     </label>
@@ -84,7 +84,7 @@
                             name="Status"
                             data-auto-submit="true"
                             class="form-select form-select-sm">
-                        <option value="">@ViewText.T("Tất cả trạng thái", "All statuses")</option>
+                        <option value="">@ViewText.T("Tất cả", "All statuses")</option>
                         @foreach (var status in allStatuses)
                         {
                             <option value="@status" selected="@(q.Status == status)">
@@ -94,7 +94,7 @@
                     </select>
                 </div>
 
-                <div class="col-6 col-sm-3 col-xl-2">
+                <div class="col-6 col-sm-4 col-xl-2">
                     <label for="order-filter-from" class="form-label small fw-semibold mb-1">
                         @ViewText.T("Từ ngày", "From date")
                     </label>
@@ -105,7 +105,7 @@
                            class="form-control form-control-sm" />
                 </div>
 
-                <div class="col-6 col-sm-3 col-xl-2">
+                <div class="col-6 col-sm-4 col-xl-2">
                     <label for="order-filter-to" class="form-label small fw-semibold mb-1">
                         @ViewText.T("Đến ngày", "To date")
                     </label>
@@ -116,9 +116,9 @@
                            class="form-control form-control-sm" />
                 </div>
 
-                <div class="col-6 col-sm-4 col-md-3">
+                <div class="col-6 col-sm-4 col-xl-1">
                     <label for="order-filter-pagesize" class="form-label small fw-semibold mb-1">
-                        @ViewText.T("Số dòng / trang", "Per page")
+                        @ViewText.T("Hiển thị", "Show")
                     </label>
                     <select id="order-filter-pagesize"
                             name="PageSize"
@@ -135,9 +135,9 @@
                     </select>
                 </div>
 
-                <div class="col-6 col-sm-8 col-md-9 d-flex flex-wrap gap-2">
+                <div class="col-12 col-sm-8 col-xl-12 d-flex flex-wrap justify-content-end gap-2 pt-1">
                     <button type="submit" class="btn btn-sm bs-btn-primary px-3">
-                        @ViewText.T("Lọc đơn hàng", "Filter")
+                        @ViewText.T("Lọc", "Filter")
                     </button>
                     <a href="@baseUrl" class="btn btn-sm btn-outline-secondary">
                         @ViewText.T("Đặt lại", "Reset")
@@ -148,33 +148,41 @@
     </div>
 </section>
 
-<section class="card bs-surface-card">
+<section class="card bs-surface-card" aria-labelledby="orders-table-heading">
     <div class="card-body p-0">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 p-lg-4 border-bottom">
-            <h2 class="h5 bs-serif-heading mb-0">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-3 border-bottom">
+            <h2 id="orders-table-heading" class="h6 fw-bold mb-0">
                 @(Model.IsAdmin
-                    ? ViewText.T("Danh sách đơn hàng hệ thống", "System Orders")
-                    : ViewText.T("Danh sách đơn hàng của bạn", "Your Orders"))
+                    ? ViewText.T("Danh sách đơn hàng", "Orders")
+                    : ViewText.T("Đơn hàng của bạn", "Your Orders"))
             </h2>
-            <span class="badge text-bg-light border">
+            <span class="badge bs-badge-category bs-tabular">
                 @Model.Orders.TotalItems @ViewText.T("đơn hàng", "orders")
             </span>
         </div>
 
         @if (Model.Orders.Items.Count == 0)
         {
-            <div class="p-4 text-center">
-                <p class="text-secondary mb-3">
-                    @ViewText.T(
-                        "Không có đơn hàng nào khớp với điều kiện tra cứu hiện tại.",
-                        "No orders match the current filter criteria.")
+            <div class="p-4 p-lg-5 text-center">
+                <h3 class="h6 fw-bold mb-1">
+                    @ViewText.T("Không có đơn hàng nào khớp với bộ lọc", "No orders match the current filters")
+                </h3>
+                <p class="text-secondary small mb-3">
+                    @(Model.IsAdmin
+                        ? ViewText.T("Hãy mở rộng khoảng ngày hoặc xóa điều kiện lọc mã đơn / khách hàng.", "Try widening the date range or clearing the order code / customer filter.")
+                        : ViewText.T("Bạn có thể xóa bộ lọc hoặc khám phá danh mục sách để đặt đơn mới.", "Clear your filters or browse the book catalog to place a new order."))
                 </p>
-                @if (!Model.IsAdmin)
-                {
-                    <a href="/sach" class="btn btn-sm bs-btn-primary">
-                        @ViewText.T("Khám phá danh mục sách", "Browse Catalog")
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="@baseUrl" class="btn btn-sm btn-outline-secondary">
+                        @ViewText.T("Xem tất cả đơn", "View All Orders")
                     </a>
-                }
+                    @if (!Model.IsAdmin)
+                    {
+                        <a href="/sach" class="btn btn-sm bs-btn-primary">
+                            @ViewText.T("Mua sách", "Browse Books")
+                        </a>
+                    }
+                </div>
             </div>
         }
         else
@@ -186,9 +194,9 @@
                             <th>@ViewText.T("Mã đơn", "Order Code")</th>
                             @if (Model.IsAdmin)
                             {
-                                <th>@ViewText.T("Tài khoản", "Customer")</th>
+                                <th>@ViewText.T("Khách hàng", "Customer")</th>
                             }
-                            <th>@ViewText.T("Thời gian đặt", "Created At")</th>
+                            <th>@ViewText.T("Ngày tạo", "Created At")</th>
                             <th>@ViewText.T("Trạng thái đơn", "Order Status")</th>
                             <th>@ViewText.T("Thanh toán", "Payment")</th>
                             <th class="text-end">@ViewText.T("Tổng tiền", "Total")</th>
@@ -196,30 +204,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.Orders.Items)
+                        @foreach (var order in Model.Orders.Items)
                         {
-                            var detailUrl = $"{baseUrl}/{item.Id}";
+                            var detailUrl = $"{baseUrl}/{order.Id}";
                             <tr>
                                 <td class="fw-semibold text-nowrap">
                                     <a href="@detailUrl" class="text-decoration-none">
-                                        <code>@item.OrderCode</code>
+                                        <code>@order.OrderCode</code>
                                     </a>
                                 </td>
                                 @if (Model.IsAdmin)
                                 {
-                                    <td>@item.UserName</td>
+                                    <td>@order.UserName</td>
                                 }
-                                <td class="text-nowrap small text-secondary">
-                                    @ViewText.FormatVietnamTime(item.CreatedAt)
+                                <td class="text-nowrap small text-secondary bs-tabular">
+                                    @ViewText.FormatVietnamTime(order.CreatedAt)
                                 </td>
-                                <td>
-                                    @await Html.PartialAsync("_OrderStatusBadge", item.Status)
-                                </td>
-                                <td>
-                                    @await Html.PartialAsync("_PaymentStatusBadge", item.PaymentStatus)
-                                </td>
-                                <td class="text-end fw-bold bs-price-current text-nowrap">
-                                    @ViewText.FormatVnd(item.TotalAmount)
+                                <td>@await Html.PartialAsync("_OrderStatusBadge", order.Status)</td>
+                                <td>@await Html.PartialAsync("_PaymentStatusBadge", order.PaymentStatus)</td>
+                                <td class="text-end fw-bold text-nowrap bs-price-current bs-tabular">
+                                    @ViewText.FormatVnd(order.TotalAmount)
                                 </td>
                                 <td class="text-end text-nowrap">
                                     <a href="@detailUrl" class="btn btn-sm btn-outline-secondary">
@@ -242,7 +246,7 @@
     var startPage = Math.Max(1, currentPage - 2);
     var endPage = Math.Min(totalPages, currentPage + 2);
 
-    <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh sách đơn hàng", "Orders pagination")">
+    <nav class="mt-4" aria-label="@ViewText.T("Phân trang đơn hàng", "Orders pagination")">
         <ul class="pagination justify-content-center flex-wrap mb-0">
             <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
                 <a class="page-link"
@@ -255,9 +259,7 @@
 
             @if (startPage > 1)
             {
-                <li class="page-item">
-                    <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                </li>
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
                 @if (startPage > 2)
                 {
                     <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
@@ -277,9 +279,7 @@
                 {
                     <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
                 }
-                <li class="page-item">
-                    <a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a>
-                </li>
+                <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
             }
 
             <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">

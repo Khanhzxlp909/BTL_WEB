@@ -11,8 +11,10 @@
     var currentUserId = isAuthenticated
         ? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? ""
         : "";
-    var isAdminRoute = currentPath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase);
     var currentSearch = Context.Request.Query["Search"].ToString();
+    var isHome = string.Equals(currentPath, "/", StringComparison.OrdinalIgnoreCase);
+    var isCatalog = currentPath.StartsWith("/sach", StringComparison.OrdinalIgnoreCase);
+    var isInStockFilter = isCatalog && string.Equals(Context.Request.Query["InStock"], "true", StringComparison.OrdinalIgnoreCase);
     var isErrorView = ViewData.Model is ErrorViewModel;
     var successMessage = isErrorView ? null : TempData["Success"] as string;
     var errorMessage = isErrorView ? null : TempData["Error"] as string;
@@ -24,215 +26,287 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(ViewData["Title"] is string pageTitle && !string.IsNullOrWhiteSpace(pageTitle) ? $"{pageTitle} - BookStore" : "BookStore")</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="/css/site.css" />
-    <link rel="stylesheet" href="/css/admin.css" />
-    <link rel="stylesheet" href="/css/commerce.css" />
+    <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/commerce.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/admin.css" asp-append-version="true" />
 </head>
 <body class="bs-body d-flex flex-column min-vh-100"
       data-authenticated="@(isAuthenticated ? "true" : "false")"
       data-user-id="@currentUserId">
+    <a href="#main-content" class="bs-skip-link">
+        @ViewText.T("Chuyển đến nội dung chính", "Skip to main content")
+    </a>
+
     @if (isAuthenticated)
     {
         <div id="bs-csrf-token" class="d-none">@Html.AntiForgeryToken()</div>
     }
-    <header class="bs-header border-bottom">
-        <div class="container py-2 py-lg-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-6 col-lg-3 d-flex align-items-center gap-2">
-                    <button class="btn btn-outline-secondary btn-sm d-lg-none"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#bsPrimaryNav"
-                            aria-controls="bsPrimaryNav"
-                            aria-expanded="false"
-                            aria-label="@ViewText.T("Mở menu điều hướng", "Toggle navigation menu")">
-                        @ViewText.T("Menu", "Menu")
+
+    <header class="bs-header">
+        <div class="container bs-header-inner">
+            <a href="/" class="bs-brand" aria-label="BookStore">
+                <span class="bs-brand-mark" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                    </svg>
+                </span>
+                <span class="bs-brand-title">BookStore</span>
+            </a>
+
+            <form method="get" action="/sach" class="bs-header-search" role="search">
+                <label for="header-book-search" class="visually-hidden">
+                    @ViewText.T("Tìm kiếm sách", "Search books")
+                </label>
+                <div class="bs-search-box">
+                    <svg class="bs-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <input id="header-book-search"
+                           type="search"
+                           name="Search"
+                           value="@currentSearch"
+                           maxlength="255"
+                           class="bs-search-input"
+                           placeholder="@ViewText.T("Tìm tên sách, tác giả, SKU hoặc ISBN...", "Search title, author, SKU or ISBN...")" />
+                    <button type="submit" class="bs-search-submit">
+                        @ViewText.T("Tìm", "Search")
                     </button>
-                    <a class="bs-brand text-decoration-none" href="@(isAdminRoute ? "/admin" : "/")">
-                        <span class="bs-brand-mark">BookStore</span>
-                        <span class="bs-brand-sub d-none d-sm-inline">
-                            @(isAdminRoute
-                                ? ViewText.T("Quản trị", "Administration")
-                                : ViewText.T("Tiệm sách học thuật & văn chương", "Academic & Literary Books"))
-                        </span>
+                </div>
+            </form>
+
+            <div class="bs-header-actions">
+                <form method="post" action="/ngon-ngu" asp-antiforgery="true" class="bs-lang-switch d-none d-md-inline-flex">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit"
+                            name="culture"
+                            value="vi"
+                            class="bs-lang-btn @(!ViewText.IsEnglish ? "active" : "")"
+                            aria-label="Tiếng Việt">VI</button>
+                    <button type="submit"
+                            name="culture"
+                            value="en"
+                            class="bs-lang-btn @(ViewText.IsEnglish ? "active" : "")"
+                            aria-label="English">EN</button>
+                </form>
+
+                <a href="/gio-hang" class="bs-header-cart-link" aria-label="@ViewText.T("Giỏ hàng", "Cart")">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="8" cy="21" r="1" />
+                        <circle cx="19" cy="21" r="1" />
+                        <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                    </svg>
+                    <span class="d-none d-sm-inline">@ViewText.T("Giỏ hàng", "Cart")</span>
+                    <span class="badge bs-cart-badge" data-cart-badge="true">0</span>
+                </a>
+
+                @if (isAuthenticated)
+                {
+                    <div class="dropdown d-none d-md-block">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-1 px-2 py-1"
+                                type="button"
+                                id="headerUserDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            <span class="fw-medium">@User.Identity?.Name</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="headerUserDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/tai-khoan/ho-so">
+                                    @ViewText.T("Hồ sơ cá nhân", "My Profile")
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/don-hang">
+                                    @ViewText.T("Đơn hàng của tôi", "My Orders")
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/tai-khoan/doi-mat-khau">
+                                    @ViewText.T("Đổi mật khẩu", "Change Password")
+                                </a>
+                            </li>
+                            @if (isAdmin)
+                            {
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item fw-semibold" href="/admin">
+                                        @ViewText.T("Trang quản trị", "Admin Workspace")
+                                    </a>
+                                </li>
+                            }
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        @ViewText.T("Đăng xuất", "Sign out")
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <div class="d-none d-md-flex align-items-center gap-2">
+                        <a href="/tai-khoan/dang-nhap" class="btn btn-sm btn-outline-secondary">
+                            @ViewText.T("Đăng nhập", "Sign in")
+                        </a>
+                        <a href="/tai-khoan/dang-ky" class="btn btn-sm bs-btn-primary">
+                            @ViewText.T("Đăng ký", "Register")
+                        </a>
+                    </div>
+                }
+
+                <button class="btn btn-sm btn-outline-secondary d-md-none"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#mobileStorefrontNav"
+                        aria-controls="mobileStorefrontNav"
+                        aria-label="@ViewText.T("Mở menu", "Open menu")">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="4" x2="20" y1="12" y2="12" />
+                        <line x1="4" x2="20" y1="6" y2="6" />
+                        <line x1="4" x2="20" y1="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bs-subnav d-none d-md-block" aria-label="@ViewText.T("Điều hướng cửa hàng", "Store navigation")">
+        <div class="container">
+            <ul class="bs-subnav-list">
+                <li>
+                    <a href="/" class="bs-subnav-link @(isHome ? "active" : "")">
+                        @ViewText.T("Trang chủ", "Home")
+                    </a>
+                </li>
+                <li>
+                    <a href="/sach" class="bs-subnav-link @(isCatalog && !isInStockFilter ? "active" : "")">
+                        @ViewText.T("Tất cả sách", "All Books")
+                    </a>
+                </li>
+                <li>
+                    <a href="/sach?InStock=true" class="bs-subnav-link @(isInStockFilter ? "active" : "")">
+                        @ViewText.T("Sách còn hàng", "In-Stock Books")
+                    </a>
+                </li>
+                @if (isAuthenticated)
+                {
+                    <li>
+                        <a href="/don-hang" class="bs-subnav-link @(currentPath.StartsWith("/don-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                            @ViewText.T("Đơn hàng của tôi", "My Orders")
+                        </a>
+                    </li>
+                }
+                @if (isAdmin)
+                {
+                    <li class="ms-auto">
+                        <a href="/admin" class="bs-subnav-link fw-semibold">
+                            @ViewText.T("Quản trị hệ thống", "Administration") &rarr;
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileStorefrontNav" aria-labelledby="mobileStorefrontNavLabel">
+        <div class="offcanvas-header border-bottom">
+            <h2 class="h6 fw-bold mb-0" id="mobileStorefrontNavLabel">BookStore</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="@ViewText.T("Đóng", "Close")"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-grid gap-1 mb-3">
+                    <a href="/" class="btn btn-sm text-start @(isHome ? "bs-btn-primary" : "btn-outline-secondary")">
+                        @ViewText.T("Trang chủ", "Home")
+                    </a>
+                    <a href="/sach" class="btn btn-sm text-start @(isCatalog && !isInStockFilter ? "bs-btn-primary" : "btn-outline-secondary")">
+                        @ViewText.T("Tất cả sách", "All Books")
+                    </a>
+                    <a href="/sach?InStock=true" class="btn btn-sm text-start @(isInStockFilter ? "bs-btn-primary" : "btn-outline-secondary")">
+                        @ViewText.T("Sách còn hàng", "In-Stock Books")
+                    </a>
+                    <a href="/gio-hang" class="btn btn-sm text-start @(currentPath.StartsWith("/gio-hang", StringComparison.OrdinalIgnoreCase) ? "bs-btn-primary" : "btn-outline-secondary")">
+                        @ViewText.T("Giỏ hàng", "Shopping Cart")
                     </a>
                 </div>
 
-                <div class="col-12 col-lg-5 order-3 order-lg-2">
-                    <form method="get" action="/sach" class="bs-search-form d-flex gap-2" role="search">
-                        <label for="header-book-search" class="visually-hidden">
-                            @ViewText.T("Tìm sách theo tên, tác giả, mã sách", "Search books by title, author, SKU or ISBN")
-                        </label>
-                        <input id="header-book-search"
-                               type="search"
-                               name="Search"
-                               value="@currentSearch"
-                               maxlength="255"
-                               class="form-control form-control-sm bs-search-input"
-                               placeholder="@ViewText.T("Tìm sách theo tên, tác giả, mã sách...", "Search by title, author, SKU, ISBN...")" />
-                        <button type="submit" class="btn btn-sm bs-btn-primary px-3 text-nowrap">
-                            @ViewText.T("Tìm", "Search")
+                <hr />
+
+                @if (isAuthenticated)
+                {
+                    <div class="small text-secondary mb-2">
+                        @ViewText.T("Tài khoản:", "Account:") <strong class="text-dark">@User.Identity?.Name</strong>
+                    </div>
+                    <div class="d-grid gap-1 mb-3">
+                        <a href="/don-hang" class="btn btn-sm btn-outline-secondary text-start">
+                            @ViewText.T("Đơn hàng của tôi", "My Orders")
+                        </a>
+                        <a href="/tai-khoan/ho-so" class="btn btn-sm btn-outline-secondary text-start">
+                            @ViewText.T("Hồ sơ cá nhân", "My Profile")
+                        </a>
+                        <a href="/tai-khoan/doi-mat-khau" class="btn btn-sm btn-outline-secondary text-start">
+                            @ViewText.T("Đổi mật khẩu", "Change Password")
+                        </a>
+                        @if (isAdmin)
+                        {
+                            <a href="/admin" class="btn btn-sm bs-btn-primary text-start">
+                                @ViewText.T("Trang quản trị", "Admin Workspace")
+                            </a>
+                        }
+                    </div>
+                    <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                            @ViewText.T("Đăng xuất", "Sign out")
                         </button>
                     </form>
-                </div>
-
-                <div class="col-6 col-lg-4 order-2 order-lg-3 d-flex justify-content-end align-items-center gap-2 flex-wrap">
-                    <form method="post" action="/ngon-ngu" asp-antiforgery="true" class="d-inline-flex align-items-center bs-lang-switch" aria-label="@ViewText.T("Chọn ngôn ngữ", "Language switcher")">
-                        <input type="hidden" name="returnUrl" value="@returnUrl" />
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="submit"
-                                    name="culture"
-                                    value="vi"
-                                    class="btn @(ViewText.IsEnglish ? "btn-outline-secondary" : "bs-btn-active-lang")"
-                                    aria-pressed="@(!ViewText.IsEnglish ? "true" : "false")">
-                                VI
-                            </button>
-                            <button type="submit"
-                                    name="culture"
-                                    value="en"
-                                    class="btn @(ViewText.IsEnglish ? "bs-btn-active-lang" : "btn-outline-secondary")"
-                                    aria-pressed="@(ViewText.IsEnglish ? "true" : "false")">
-                                EN
-                            </button>
-                        </div>
-                    </form>
-
-                    @if (isAuthenticated)
-                    {
-                        <a href="/gio-hang"
-                           class="btn btn-sm bs-header-cart-link d-inline-flex align-items-center gap-1"
-                           aria-label="@ViewText.T("Giỏ hàng", "Shopping cart")">
-                            <span>@ViewText.T("Giỏ hàng", "Cart")</span>
-                            <span id="bs-header-cart-count" class="bs-cart-count-pill" data-cart-badge="true">0</span>
-                        </a>
-                        <a href="/tai-khoan/ho-so" class="btn btn-sm btn-outline-secondary text-truncate bs-user-pill" title="@User.Identity?.Name">
-                            @User.Identity?.Name
-                        </a>
-                        <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true" class="d-inline">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                @ViewText.T("Đăng xuất", "Sign out")
-                            </button>
-                        </form>
-                    }
-                    else
-                    {
+                }
+                else
+                {
+                    <div class="d-grid gap-2">
                         <a href="/tai-khoan/dang-nhap" class="btn btn-sm bs-btn-primary">
                             @ViewText.T("Đăng nhập", "Sign in")
                         </a>
-                        <a href="/tai-khoan/dang-ky" class="btn btn-sm btn-outline-secondary d-none d-sm-inline-block">
-                            @ViewText.T("Đăng ký", "Register")
+                        <a href="/tai-khoan/dang-ky" class="btn btn-sm btn-outline-secondary">
+                            @ViewText.T("Đăng ký tài khoản", "Create Account")
                         </a>
-                    }
-                </div>
+                    </div>
+                }
+            </div>
+
+            <div class="border-top pt-3 d-flex justify-content-between align-items-center">
+                <span class="small text-secondary">@ViewText.T("Ngôn ngữ", "Language")</span>
+                <form method="post" action="/ngon-ngu" asp-antiforgery="true" class="bs-lang-switch">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <button type="submit" name="culture" value="vi" class="bs-lang-btn @(!ViewText.IsEnglish ? "active" : "")">VI</button>
+                    <button type="submit" name="culture" value="en" class="bs-lang-btn @(ViewText.IsEnglish ? "active" : "")">EN</button>
+                </form>
             </div>
         </div>
+    </div>
 
-        <nav id="bsPrimaryNav" class="bs-subnav collapse d-lg-block border-top" aria-label="@ViewText.T("Điều hướng chính", "Main navigation")">
-            <div class="container">
-                <ul class="nav flex-column flex-lg-row flex-lg-wrap py-1 gap-lg-1">
-                    <li class="nav-item">
-                        <a class="nav-link bs-nav-link @(currentPath == "/" ? "active" : "")" href="/">
-                            @ViewText.T("Trang chủ", "Home")
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link bs-nav-link @(currentPath.StartsWith("/sach", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/sach">
-                            @ViewText.T("Sách", "Books")
-                        </a>
-                    </li>
-                    @if (isAuthenticated)
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/gio-hang", StringComparison.OrdinalIgnoreCase) || currentPath.StartsWith("/dat-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/gio-hang">
-                                @ViewText.T("Giỏ hàng", "Cart")
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/don-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/don-hang">
-                                @ViewText.T("Đơn hàng của tôi", "My Orders")
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/ho-so", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/ho-so">
-                                @ViewText.T("Hồ sơ cá nhân", "My Profile")
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/doi-mat-khau", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/doi-mat-khau">
-                                @ViewText.T("Đổi mật khẩu", "Change Password")
-                            </a>
-                        </li>
-                        @if (isAdmin)
-                        {
-                            <li class="nav-item ms-lg-auto">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(string.Equals(currentPath, "/admin", StringComparison.OrdinalIgnoreCase) || string.Equals(currentPath, "/admin/", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin">
-                                    @ViewText.T("Tổng quan quản trị", "Admin Dashboard")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/sach", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/sach">
-                                    @ViewText.T("Quản trị sách", "Manage Books")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/the-loai", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/the-loai">
-                                    @ViewText.T("Quản trị thể loại", "Manage Categories")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/kho", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/kho">
-                                    @ViewText.T("Quản trị kho", "Manage Inventory")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/don-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/don-hang">
-                                    @ViewText.T("Đơn hàng", "Orders")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/danh-gia", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/danh-gia">
-                                    @ViewText.T("Đánh giá", "Reviews")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/khach-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/khach-hang">
-                                    @ViewText.T("Khách hàng", "Customers")
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/bao-cao", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/bao-cao">
-                                    @ViewText.T("Báo cáo", "Reports")
-                                </a>
-                            </li>
-                        }
-                    }
-                    else
-                    {
-                        <li class="nav-item d-sm-none">
-                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/dang-ky", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/dang-ky">
-                                @ViewText.T("Đăng ký tài khoản", "Create Account")
-                            </a>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </nav>
-    </header>
-
-    <main class="flex-grow-1 py-4">
+    <main id="main-content" class="flex-grow-1 py-4">
         <div class="container">
             @if (!string.IsNullOrWhiteSpace(successMessage))
             {
-                <div class="alert alert-success alert-dismissible fade show bs-flash-alert" role="alert">
-                    <strong>@ViewText.T("Thành công:", "Success:")</strong> @successMessage
+                <div class="alert alert-success alert-dismissible fade show mb-4" role="status">
+                    @successMessage
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
                 </div>
             }
             @if (!string.IsNullOrWhiteSpace(errorMessage))
             {
-                <div class="alert alert-danger alert-dismissible fade show bs-flash-alert" role="alert">
-                    <strong>@ViewText.T("Thông báo lỗi:", "Error:")</strong> @errorMessage
+                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                    <strong>@ViewText.T("Không thể thực hiện:", "Action failed:")</strong> @errorMessage
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
                 </div>
             }
@@ -241,24 +315,34 @@
         </div>
     </main>
 
-    <footer class="bs-footer border-top py-4 mt-auto">
-        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-            <div>
-                <span class="fw-semibold">BookStore</span> &mdash;
-                @ViewText.T("Website quản lý và bán sách", "Online Bookstore and Management System")
+    <footer class="bs-footer py-4 mt-auto">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom">
+                <div>
+                    <a href="/" class="fw-bold font-serif fs-6 text-dark text-decoration-none">BookStore</a>
+                    <span class="mx-2 text-muted">&middot;</span>
+                    <span class="small">
+                        @ViewText.T("Thanh toán khi nhận hàng (COD) · Miễn phí giao hàng toàn quốc", "Cash on Delivery (COD) · Free nationwide shipping")
+                    </span>
+                </div>
+                <ul class="list-inline mb-0 d-flex flex-wrap gap-3 small">
+                    <li class="list-inline-item m-0"><a href="/">@ViewText.T("Trang chủ", "Home")</a></li>
+                    <li class="list-inline-item m-0"><a href="/sach">@ViewText.T("Tất cả sách", "Books")</a></li>
+                    <li class="list-inline-item m-0"><a href="/sach?InStock=true">@ViewText.T("Sách còn hàng", "In Stock")</a></li>
+                    <li class="list-inline-item m-0"><a href="/gio-hang">@ViewText.T("Giỏ hàng", "Cart")</a></li>
+                </ul>
             </div>
-            <div class="small text-secondary d-flex flex-wrap gap-3">
-                <a class="link-secondary text-decoration-none" href="/">@ViewText.T("Trang chủ", "Home")</a>
-                <a class="link-secondary text-decoration-none" href="/sach">@ViewText.T("Danh mục sách", "Catalog")</a>
-                <span>@ViewText.T("Múi giờ hiển thị: Asia/Ho_Chi_Minh (UTC+7)", "Display timezone: Asia/Ho_Chi_Minh (UTC+7)")</span>
+            <div class="pt-3 small d-flex flex-wrap justify-content-between gap-2">
+                <span>&copy; @DateTime.UtcNow.AddHours(7).Year BookStore</span>
+                <span>@ViewText.T("Nhà sách trực tuyến", "Online Bookstore")</span>
             </div>
         </div>
     </footer>
 
-    <script src="/lib/jquery/jquery.min.js"></script>
-    <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="/js/site.js"></script>
-    <script src="/js/commerce.js"></script>
+    <script src="/lib/jquery/jquery.min.js" asp-append-version="true"></script>
+    <script src="/lib/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    <script src="/js/commerce.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

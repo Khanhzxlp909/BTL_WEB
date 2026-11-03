@@ -1,103 +1,85 @@
 @model LockCustomerViewModel
 @{
+    Layout = "_AdminLayout";
     var c = Model.Customer;
-    ViewData["Title"] = ViewText.T($"Khóa khách hàng {c.UserName}", $"Lock Customer {c.UserName}");
+    ViewData["Title"] = ViewText.T($"Khóa tài khoản — {c.UserName}", $"Lock Account — {c.UserName}");
+    var lockConfirmMsg = ViewText.T(
+        $"Xác nhận khóa tài khoản khách hàng “{c.UserName}” (#{c.Id})? Phiên đăng nhập hiện tại của họ sẽ bị vô hiệu ngay lập tức.",
+        $"Confirm locking customer account “{c.UserName}” (#{c.Id})? Their active sessions will be invalidated immediately.");
 }
 
-<div class="row g-4">
-    <aside class="col-12 col-lg-3">
-        @await Html.PartialAsync("_AdminNav")
-    </aside>
+@section PageActions {
+    <a href="/admin/khach-hang" class="btn btn-sm btn-outline-secondary">
+        &larr; @ViewText.T("Danh sách khách hàng", "Back to Customers")
+    </a>
+}
 
-    <div class="col-12 col-lg-9">
+@await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể khóa tài khoản khách hàng. Vui lòng kiểm tra lý do bên dưới:", "Unable to lock customer account. Please review the details below:"))
+
+<section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Thông tin khách hàng", "Customer summary")">
+    <div class="card-body p-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h1 class="h3 bs-serif-heading mb-1">
-                    @ViewText.T("Khóa tài khoản khách hàng", "Lock Customer Account")
-                </h1>
-                <p class="text-secondary small mb-0">
-                    @ViewText.T(
-                        "Khi khóa, phiên đăng nhập hiện tại của khách hàng sẽ bị thu hồi ngay lập tức và tài khoản không thể đăng nhập cho tới khi được mở khóa.",
-                        "Locking immediately invalidates active sessions and prevents sign-in until an administrator unlocks the account.")
-                </p>
-            </div>
-            <a href="/admin/khach-hang" class="btn btn-sm btn-outline-secondary">
-                &larr; @ViewText.T("Danh sách khách hàng", "Back to Customers")
-            </a>
+            <h2 class="h5 fw-bold mb-0">
+                @c.UserName <span class="text-muted small bs-tabular">#@c.Id</span>
+            </h2>
+            @if (c.IsActive)
+            {
+                <span class="badge bs-badge-instock">@ViewText.T("Đang hoạt động", "Active")</span>
+            }
+            else
+            {
+                <span class="badge bs-badge-outstock">@ViewText.T("Đang khóa", "Locked")</span>
+            }
         </div>
 
-        @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể khóa tài khoản khách hàng. Vui lòng kiểm tra lý do bên dưới:", "Unable to lock customer account. Please review the details below:"))
+        <dl class="row small mb-0">
+            <dt class="col-sm-3 text-secondary mb-1">@ViewText.T("Họ và tên", "Full Name")</dt>
+            <dd class="col-sm-9 mb-1">@(string.IsNullOrWhiteSpace(c.FullName) ? ViewText.T("Chưa cập nhật", "Not set") : c.FullName)</dd>
 
-        <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Thông tin khách hàng", "Customer summary")">
-            <div class="card-body p-4">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                    <h2 class="h5 bs-serif-heading mb-0">
-                        @c.UserName <span class="text-muted small">#@c.Id</span>
-                    </h2>
-                    @if (c.IsActive)
-                    {
-                        <span class="badge bs-badge-instock">@ViewText.T("Đang hoạt động", "Active")</span>
-                    }
-                    else
-                    {
-                        <span class="badge bs-badge-outstock">@ViewText.T("Đang khóa", "Locked")</span>
-                    }
-                </div>
+            <dt class="col-sm-3 text-secondary mb-1">Email</dt>
+            <dd class="col-sm-9 mb-1 bs-wrap-anywhere">@c.Email</dd>
 
-                <dl class="row small mb-0">
-                    <dt class="col-sm-3 text-secondary">@ViewText.T("Họ và tên", "Full Name")</dt>
-                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(c.FullName) ? ViewText.T("Chưa cập nhật", "Not set") : c.FullName)</dd>
+            <dt class="col-sm-3 text-secondary mb-1">@ViewText.T("Số điện thoại", "Phone")</dt>
+            <dd class="col-sm-9 mb-1 bs-tabular">@(string.IsNullOrWhiteSpace(c.Phone) ? ViewText.T("Chưa cập nhật", "Not set") : c.Phone)</dd>
 
-                    <dt class="col-sm-3 text-secondary">Email</dt>
-                    <dd class="col-sm-9 bs-wrap-anywhere">@c.Email</dd>
-
-                    <dt class="col-sm-3 text-secondary">@ViewText.T("Số điện thoại", "Phone")</dt>
-                    <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(c.Phone) ? ViewText.T("Chưa cập nhật", "Not set") : c.Phone)</dd>
-
-                    <dt class="col-sm-3 text-secondary mb-0">@ViewText.T("Ngày tạo", "Created At")</dt>
-                    <dd class="col-sm-9 mb-0">@ViewText.FormatVietnamTime(c.CreatedAt)</dd>
-                </dl>
-            </div>
-        </section>
-
-        <section class="card bs-surface-card border-danger-subtle" aria-label="@ViewText.T("Biểu mẫu khóa tài khoản", "Lock account form")">
-            <div class="card-body p-4">
-                <form method="post"
-                      action="/admin/khach-hang/@c.Id/khoa"
-                      asp-antiforgery="true"
-                      data-confirm="@ViewText.T($"Xác nhận khóa tài khoản khách hàng \"{c.UserName}\" (#{c.Id})? Phiên đăng nhập hiện tại của họ sẽ bị vô hiệu ngay lập tức.", $"Confirm locking customer account \"{c.UserName}\" (#{c.Id})? Their active sessions will be invalidated immediately.")"
-                      data-prevent-double-submit="true"
-                      novalidate>
-                    <div class="mb-3">
-                        <label asp-for="Input.Reason" class="form-label fw-semibold">
-                            @ViewText.T("Lý do khóa tài khoản", "Lock Reason") <span class="text-danger">*</span>
-                        </label>
-                        <textarea asp-for="Input.Reason"
-                                  class="form-control"
-                                  rows="4"
-                                  maxlength="500"
-                                  placeholder="@ViewText.T("Nêu rõ lý do vi phạm hoặc yêu cầu bảo mật (tối đa 500 ký tự)...", "Specify the violation or security reason (up to 500 characters)...")"
-                                  required></textarea>
-                        <div class="form-text small">
-                            @ViewText.T("Bắt buộc nhập, tối đa 500 ký tự.", "Required, up to 500 characters.")
-                        </div>
-                        <span asp-validation-for="Input.Reason" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3">
-                        <a href="/admin/khach-hang" class="btn btn-outline-secondary">
-                            @ViewText.T("Hủy", "Cancel")
-                        </a>
-                        <button type="submit" class="btn btn-danger px-4">
-                            @ViewText.T("Xác nhận khóa tài khoản", "Confirm Lock Account")
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </section>
+            <dt class="col-sm-3 text-secondary mb-0">@ViewText.T("Ngày tạo", "Created At")</dt>
+            <dd class="col-sm-9 mb-0 bs-tabular">@ViewText.FormatVietnamTime(c.CreatedAt)</dd>
+        </dl>
     </div>
-</div>
+</section>
 
-@section Scripts {
-    <script src="/js/admin.js"></script>
-}
+<section class="card bs-surface-card border-danger-subtle" aria-label="@ViewText.T("Biểu mẫu khóa tài khoản", "Lock account form")">
+    <div class="card-body p-4">
+        <form method="post"
+              action="/admin/khach-hang/@c.Id/khoa"
+              asp-antiforgery="true"
+              data-confirm="@lockConfirmMsg"
+              data-prevent-double-submit="true"
+              novalidate>
+            <div class="mb-3">
+                <label asp-for="Input.Reason" class="form-label fw-semibold">
+                    @ViewText.T("Lý do khóa tài khoản", "Lock Reason") <span class="text-danger">*</span>
+                </label>
+                <textarea asp-for="Input.Reason"
+                          class="form-control"
+                          rows="4"
+                          maxlength="500"
+                          placeholder="@ViewText.T("Nêu rõ lý do vi phạm hoặc yêu cầu bảo mật (tối đa 500 ký tự)...", "Specify the violation or security reason (up to 500 characters)...")"
+                          required></textarea>
+                <div class="form-text small">
+                    @ViewText.T("Bắt buộc nhập, tối đa 500 ký tự.", "Required, up to 500 characters.")
+                </div>
+                <span asp-validation-for="Input.Reason" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-3">
+                <a href="/admin/khach-hang" class="btn btn-outline-secondary">
+                    @ViewText.T("Hủy", "Cancel")
+                </a>
+                <button type="submit" class="btn btn-danger px-4">
+                    @ViewText.T("Xác nhận khóa tài khoản", "Confirm Lock Account")
+                </button>
+            </div>
+        </form>
+    </div>
+</section>

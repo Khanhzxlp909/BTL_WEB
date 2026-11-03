@@ -3,90 +3,83 @@
     ViewData["Title"] = ViewText.T("Đăng ký tài khoản", "Create Account");
 }
 
-<section class="row justify-content-center py-2">
-    <div class="col-12 col-md-8 col-lg-5">
-        <div class="card bs-surface-card">
-            <div class="card-body p-4 p-lg-5">
-                <h1 class="h3 bs-serif-heading mb-1">
-                    @ViewText.T("Đăng ký tài khoản", "Create Account")
-                </h1>
-                <p class="text-secondary small mb-4">
-                    @ViewText.T(
-                        "Tạo tài khoản khách hàng (Customer) để quản lý thông tin cá nhân và sử dụng các dịch vụ tại BookStore.",
-                        "Register a Customer account to manage your profile and access BookStore services.")
-                </p>
+<section class="bs-auth-wrap">
+    <div class="card bs-surface-card">
+        <div class="card-body p-4">
+            <h1 class="h4 bs-serif-heading fw-bold mb-1">
+                @ViewText.T("Đăng ký tài khoản", "Create Account")
+            </h1>
+            <p class="text-secondary small mb-4">
+                @ViewText.T("Tạo tài khoản mới để đặt sách và theo dõi đơn hàng.", "Create an account to order books and track your deliveries.")
+            </p>
 
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div asp-validation-summary="All" class="alert alert-danger small" role="alert"></div>
-                }
+            @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Chưa thể tạo tài khoản. Vui lòng kiểm tra các trường bên dưới:", "Unable to create account. Please review the fields below:"))
 
-                <form method="post" action="/tai-khoan/dang-ky" asp-antiforgery="true" novalidate>
-                    <div class="mb-3">
-                        <label asp-for="UserName" class="form-label fw-semibold">
-                            @ViewText.T("Tên đăng nhập", "Username")
-                        </label>
-                        <input asp-for="UserName"
-                               class="form-control"
-                               maxlength="50"
-                               autocomplete="username"
-                               placeholder="@ViewText.T("3-50 ký tự chữ, số hoặc gạch dưới", "3-50 letters, numbers, or underscores")" />
-                        <span asp-validation-for="UserName" class="text-danger small"></span>
-                    </div>
+            <form method="post" action="/tai-khoan/dang-ky" asp-antiforgery="true" novalidate>
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label fw-semibold">
+                        @ViewText.T("Tên đăng nhập", "Username")
+                    </label>
+                    <input asp-for="UserName"
+                           class="form-control"
+                           maxlength="50"
+                           autocomplete="username"
+                           placeholder="@ViewText.T("3-50 ký tự chữ, số hoặc gạch dưới", "3-50 letters, numbers, or underscores")" />
+                    <span asp-validation-for="UserName" class="text-danger small"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold">Email</label>
-                        <input asp-for="Email"
-                               type="email"
-                               class="form-control"
-                               maxlength="254"
-                               autocomplete="email"
-                               placeholder="reader@example.com" />
-                        <span asp-validation-for="Email" class="text-danger small"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                    <input asp-for="Email"
+                           type="email"
+                           class="form-control"
+                           maxlength="254"
+                           autocomplete="email"
+                           placeholder="reader@example.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-semibold">
-                            @ViewText.T("Mật khẩu", "Password")
-                        </label>
-                        <input asp-for="Password"
-                               type="password"
-                               value=""
-                               class="form-control"
-                               maxlength="64"
-                               autocomplete="new-password"
-                               placeholder="@ViewText.T("10-64 ký tự (giữ nguyên khoảng trắng)", "10-64 characters (spaces preserved)")" />
-                        <span asp-validation-for="Password" class="text-danger small"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label fw-semibold">
+                        @ViewText.T("Mật khẩu", "Password")
+                    </label>
+                    <input asp-for="Password"
+                           type="password"
+                           value=""
+                           class="form-control"
+                           maxlength="64"
+                           autocomplete="new-password"
+                           placeholder="@ViewText.T("Từ 10 đến 64 ký tự", "10 to 64 characters")" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
 
-                    <div class="mb-4">
-                        <label asp-for="ConfirmPassword" class="form-label fw-semibold">
-                            @ViewText.T("Xác nhận mật khẩu", "Confirm Password")
-                        </label>
-                        <input asp-for="ConfirmPassword"
-                               type="password"
-                               value=""
-                               class="form-control"
-                               maxlength="64"
-                               autocomplete="new-password"
-                               placeholder="@ViewText.T("Nhập lại mật khẩu", "Re-enter your password")" />
-                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                    </div>
+                <div class="mb-4">
+                    <label asp-for="ConfirmPassword" class="form-label fw-semibold">
+                        @ViewText.T("Xác nhận mật khẩu", "Confirm Password")
+                    </label>
+                    <input asp-for="ConfirmPassword"
+                           type="password"
+                           value=""
+                           class="form-control"
+                           maxlength="64"
+                           autocomplete="new-password"
+                           placeholder="@ViewText.T("Nhập lại mật khẩu", "Re-enter your password")" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
 
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn bs-btn-primary py-2">
-                            @ViewText.T("Đăng ký", "Create account")
-                        </button>
-                    </div>
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn bs-btn-primary py-2">
+                        @ViewText.T("Đăng ký", "Create account")
+                    </button>
+                </div>
 
-                    <div class="text-center small text-secondary">
-                        @ViewText.T("Đã có tài khoản?", "Already have an account?")
-                        <a href="/tai-khoan/dang-nhap" class="fw-semibold text-decoration-none">
-                            @ViewText.T("Đăng nhập", "Sign in")
-                        </a>
-                    </div>
-                </form>
-            </div>
+                <div class="text-center small text-secondary border-top pt-3">
+                    @ViewText.T("Đã có tài khoản?", "Already have an account?")
+                    <a href="/tai-khoan/dang-nhap" class="fw-semibold text-decoration-none ms-1">
+                        @ViewText.T("Đăng nhập", "Sign in")
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </section>
