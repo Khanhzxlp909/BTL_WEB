@@ -31,12 +31,18 @@ Nội dung BA xác định công nghệ C#/ASP.NET Core, dù tên tệp mẫu c�
 | Quản trị sách | Thêm/sửa, ngừng bán/khôi phục, tải ảnh JPEG/PNG/WEBP tối đa 5 MB |
 | Thể loại | Thêm/sửa/xóa mềm; chặn xóa khi còn sách tham chiếu |
 | Kho | Tồn ghi sổ, giữ chỗ, khả dụng; nhập hàng, lịch sử biến động, ngưỡng cảnh báo chung |
+| Giỏ hàng | Theo tài khoản; thêm/cộng dồn, sửa, xóa, làm trống bằng jQuery AJAX; không giữ chỗ |
+| Đơn COD | Báo giá có chữ ký, xác nhận lại khi đổi giá, chống tạo trùng; lịch sử và hủy đơn chính chủ |
+| Xử lý đơn | Admin lọc và chuyển trạng thái đúng bước; giao và thu COD, hủy hoàn giữ chỗ, lịch sử |
+| Đánh giá | Customer đã nhận sách viết/sửa; Admin ẩn/hiện, giữ trạng thái ẩn khi sửa nội dung |
+| Khách hàng | Tìm/lọc Customer, khóa có lý do, mở khóa; vô hiệu hóa phiên cũ |
+| Báo cáo | Doanh thu, số giao/hủy theo ngày Việt Nam; biểu đồ, bảng ngày, top 5 sách |
 | Tổng quan Admin | Số đơn đã giao/chờ xác nhận/đã hủy, sách đang bán, khách hàng |
 | Giao diện | Responsive, VI/EN, giá VND nguyên đồng, hiển thị giờ UTC+7 |
 
-**Chưa triển khai:** giỏ hàng AJAX, checkout/đơn COD, viết và kiểm duyệt đánh giá,
-quản lý khóa/mở khách hàng, báo cáo doanh thu. Mô hình dữ liệu đã có các thực thể
-tương ứng; xem [kế hoạch triển khai](docs/IMPLEMENTATION_PLAN.md).
+Sáu module nghiệp vụ đã có mã và giao diện. Kiểm thử dùng dữ liệu tách biệt;
+DB ứng dụng cần được người vận hành khởi tạo theo hướng dẫn bên dưới.
+Xem [phạm vi nghiệm thu và phần còn lại](docs/IMPLEMENTATION_PLAN.md).
 
 Các quy tắc chính:
 
@@ -46,6 +52,10 @@ Các quy tắc chính:
 - Nhập bằng phiên bản tồn cũ bị từ chối; cần tải lại form và xác nhận số liệu mới.
 - SKU và tên thể loại vẫn được giữ duy nhất sau khi ngừng bán/xóa mềm.
 - Ảnh bìa được kiểm tra nội dung, giải mã rồi chuyển WEBP với tên tệp hệ thống sinh.
+- Đặt đơn tăng giữ chỗ; giao giảm cả tồn và giữ chỗ; hủy chỉ hoàn giữ chỗ một lần.
+- Chỉ COD, phí giao hàng 0đ. Giá/giỏ đổi sau khi mở checkout phải xác nhận báo giá mới.
+- Một token xác nhận chỉ tạo một đơn, kể cả gửi lặp; token báo giá có thời hạn 24 giờ.
+- Doanh thu tính từ đơn DELIVERED theo DeliveredAt; số hủy theo CancelledAt.
 
 ## Công nghệ
 
@@ -133,6 +143,15 @@ Mở **<http://localhost:5087>**, hoặc cổng đã đặt trong `.env`.
 
 Customer tự đăng ký tại `/tai-khoan/dang-ky`. Hồ sơ và đổi mật khẩu nằm tại
 `/tai-khoan/ho-so`, `/tai-khoan/doi-mat-khau`.
+
+Mua hàng: `/sach` thêm giỏ, `/gio-hang` sửa số lượng, `/dat-hang` xác nhận báo giá
+và COD, `/don-hang` theo dõi/hủy đơn PENDING hoặc CONFIRMED. Admin xử lý tại
+`/admin/don-hang`; bắt buộc xác nhận đã giao/thu tiền trước khi DELIVERED.
+Admin hủy đơn phải có lý do, kể cả hủy đơn của chính mình.
+
+Đánh giá: `/sach/{bookId}/danh-gia` chỉ Customer đã có đơn DELIVERED chứa sách.
+Admin kiểm duyệt tại `/admin/danh-gia`, quản lý khách tại `/admin/khach-hang`,
+báo cáo tại `/admin/bao-cao` (mặc định 30 ngày).
 
 ## Quản lý môi trường
 
@@ -251,16 +270,17 @@ pnpm build
 pnpm test
 ```
 
-Kết quả nghiệm thu ngày **26/10/2026**:
+Kết quả nghiệm thu ngày **30/10/2026**:
 
 - Build: **0 warning, 0 error**.
-- Compose: **48/48 PASS**, gồm bài SQL Server thật.
-- Host: **47 PASS, 1 SKIP** khi chưa đặt `BOOKSTORE_TEST_SQLSERVER`.
+- Compose: **69/69 PASS**, gồm 7 bài SQL Server thật.
+- Host: 62 bài độc lập SQL Server; 7 bài SQL opt-in bỏ qua khi chưa đặt
+  `BOOKSTORE_TEST_SQLSERVER`.
 
 Các bài HTTP dùng SQLite in-memory riêng. Bài SQL Server chỉ tạo/xóa DB ngẫu
 nhiên `BookStoreTest_<GUID>`; không dùng DB ứng dụng. Đã kiểm tra migration,
-cạnh tranh nhập cùng rowversion, rollback tồn/lịch sử, quyền Admin, CSRF,
-validation, upload, xóa mềm và vô hiệu hóa phiên đăng nhập.
+cạnh tranh nhập cùng rowversion, tranh cuốn cuối, đặt trùng, rollback tạo/giao/
+hủy đơn, báo cáo SQL, quyền Admin, CSRF, validation, upload, xóa mềm và phiên.
 
 Chi tiết: [test case và giới hạn xác minh](docs/TEST_CASES.md).
 
@@ -274,6 +294,17 @@ Chi tiết: [test case và giới hạn xác minh](docs/TEST_CASES.md).
 | `POST` | `/api/admin/books` | Admin |
 | `PUT` | `/api/admin/books/{id}` | Admin |
 | `DELETE` | `/api/admin/books/{id}` | Admin; ngừng bán, không xóa cứng |
+| `GET` | `/api/cart` | Đã đăng nhập; giỏ chính chủ |
+| `POST` | `/api/cart/items` | Đã đăng nhập; body `bookId`, `quantity` |
+| `PUT` / `DELETE` | `/api/cart/items/{id}` | Dòng giỏ chính chủ; PUT `quantity=0` để xóa |
+| `DELETE` | `/api/cart` | Làm trống giỏ chính chủ |
+| `GET` | `/api/orders/quote` | Cart + Input có token báo giá do server ký |
+| `POST` | `/api/orders` | Đặt COD; CheckoutInput và token đã nhận |
+| `GET` | `/api/orders`, `/api/orders/{id}` | Đơn chính chủ |
+| `POST` | `/api/orders/{id}/cancel` | Hủy đơn chính chủ, body `reason` |
+| `GET` | `/api/admin/orders` | Admin; lọc mọi đơn |
+| `PUT` | `/api/admin/orders/{id}/status` | Admin; `status`, `confirmCodCollected` |
+| `POST` | `/api/admin/orders/{id}/cancel` | Admin; `reason` bắt buộc |
 
 Ví dụ tìm sách:
 
@@ -293,6 +324,10 @@ Ví dụ tìm sách:
   form cùng phiên. POST/PUT/DELETE đều cần token; chưa có xác thực bằng JWT.
 - Lỗi JSON thống nhất: `code`, `message`, `details` theo trường nếu có,
   `traceId`; HTTP đúng ngữ nghĩa. API cần đăng nhập trả 401 JSON.
+- Giỏ trả thêm `unitPriceText`, `lineTotalText`, `subtotalText`, `totalAmountText`
+  để AJAX hiển thị nguyên đồng chính xác cả khi vượt giới hạn số nguyên JavaScript.
+- CheckoutInput gồm `recipientName`, `phone`, `shippingAddress`, `note`,
+  `quoteToken`, `confirmQuote=true`. Server tính tiền; không nhận giá/tổng từ client.
 
 ## Cấu trúc thư mục
 
@@ -337,8 +372,8 @@ không xóa volume để xử lý lỗi kết nối.
 
 ## Tiến độ và tài liệu
 
-Hiện đã hoàn thành nền tảng, tài khoản, tra cứu, quản trị danh mục và kho.
-Các bước tiếp theo: giỏ hàng AJAX, đơn COD, đánh giá/khách hàng/báo cáo.
+Đã có đủ sáu module theo BA. Cần người vận hành khởi tạo DB ứng dụng trước khi
+dùng; báo cáo BTL trong tệp Word và ảnh minh họa bàn giao chưa được cập nhật tự động.
 
 - [Tiến độ đối chiếu BA và lộ trình](docs/IMPLEMENTATION_PLAN.md)
 - [Vận hành Docker Compose](docs/DOCKER_COMPOSE.md)

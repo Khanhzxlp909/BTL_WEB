@@ -1,0 +1,276 @@
+@model CustomerListViewModel
+@{
+    ViewData["Title"] = ViewText.T("Quản lý khách hàng", "Customer Management");
+    var q = Model.Query;
+    var pageSizes = new[] { 12, 24, 48 };
+
+    string BuildPageUrl(int targetPage)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(q.Search))
+        {
+            parts.Add($"Search={Uri.EscapeDataString(q.Search)}");
+        }
+        if (!string.IsNullOrWhiteSpace(q.Status) && !string.Equals(q.Status, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            parts.Add($"Status={Uri.EscapeDataString(q.Status)}");
+        }
+        if (q.PageSize != 12)
+        {
+            parts.Add($"PageSize={q.PageSize}");
+        }
+        parts.Add($"Page={targetPage}");
+        return $"/admin/khach-hang?{string.Join("&", parts)}";
+    }
+}
+
+<div class="row g-4">
+    <aside class="col-12 col-lg-3">
+        @await Html.PartialAsync("_AdminNav")
+    </aside>
+
+    <div class="col-12 col-lg-9">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h1 class="h3 bs-serif-heading mb-1">
+                    @ViewText.T("Quản lý tài khoản khách hàng", "Customer Account Management")
+                </h1>
+                <p class="text-secondary small mb-0">
+                    @ViewText.T(
+                        "Tra cứu thông tin khách hàng và quản lý khóa / mở khóa quyền đăng nhập.",
+                        "Search customer profiles and manage account lock / unlock status.")
+                </p>
+            </div>
+        </div>
+
+        @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể xử lý yêu cầu quản lý khách hàng:", "Unable to process customer management request:"))
+
+        <section class="card bs-surface-card mb-4" aria-label="@ViewText.T("Bộ lọc khách hàng", "Customer filters")">
+            <div class="card-body p-3 p-lg-4">
+                <form method="get" action="/admin/khach-hang" data-admin-filter-form="true" novalidate>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-5">
+                            <label for="customer-filter-search" class="form-label small fw-semibold mb-1">
+                                @ViewText.T("Tìm khách hàng", "Search Customer")
+                            </label>
+                            <input id="customer-filter-search"
+                                   type="search"
+                                   name="Search"
+                                   value="@q.Search"
+                                   maxlength="255"
+                                   class="form-control form-control-sm"
+                                   placeholder="@ViewText.T("Tên đăng nhập, họ tên, email, SĐT...", "Username, full name, email, phone...")" />
+                        </div>
+
+                        <div class="col-6 col-md-3">
+                            <label for="customer-filter-status" class="form-label small fw-semibold mb-1">
+                                @ViewText.T("Trạng thái tài khoản", "Status")
+                            </label>
+                            <select id="customer-filter-status"
+                                    name="Status"
+                                    data-auto-submit="true"
+                                    class="form-select form-select-sm">
+                                <option value="all" selected="@(q.Status == "all")">@ViewText.T("Tất cả", "All")</option>
+                                <option value="active" selected="@(q.Status == "active")">@ViewText.T("Đang hoạt động", "Active")</option>
+                                <option value="locked" selected="@(q.Status == "locked")">@ViewText.T("Đang khóa", "Locked")</option>
+                            </select>
+                        </div>
+
+                        <div class="col-6 col-md-2">
+                            <label for="customer-filter-pagesize" class="form-label small fw-semibold mb-1">
+                                @ViewText.T("Mỗi trang", "Per page")
+                            </label>
+                            <select id="customer-filter-pagesize"
+                                    name="PageSize"
+                                    data-auto-submit="true"
+                                    class="form-select form-select-sm">
+                                @foreach (var size in pageSizes)
+                                {
+                                    <option value="@size" selected="@(q.PageSize == size)">@size</option>
+                                }
+                                @if (!pageSizes.Contains(q.PageSize) && q.PageSize is >= 1 and <= 100)
+                                {
+                                    <option value="@q.PageSize" selected>@q.PageSize</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-2 d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-sm bs-btn-primary">
+                                @ViewText.T("Lọc", "Filter")
+                            </button>
+                            <a href="/admin/khach-hang" class="btn btn-sm btn-outline-secondary">
+                                @ViewText.T("Đặt lại", "Reset")
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="card bs-surface-card">
+            <div class="card-body p-0">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 p-lg-4 border-bottom">
+                    <h2 class="h5 bs-serif-heading mb-0">
+                        @ViewText.T("Danh sách khách hàng", "Customers List")
+                    </h2>
+                    <span class="badge text-bg-light border">
+                        @Model.Customers.TotalItems @ViewText.T("khách hàng", "customers")
+                    </span>
+                </div>
+
+                @if (Model.Customers.Items.Count == 0)
+                {
+                    <div class="p-4 text-center text-secondary">
+                        @ViewText.T(
+                            "Không tìm thấy khách hàng nào khớp với bộ lọc hiện tại.",
+                            "No customers match the current filter criteria.")
+                    </div>
+                }
+                else
+                {
+                    <div class="bs-admin-table-wrap">
+                        <table class="table bs-admin-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>@ViewText.T("Tài khoản & Họ tên", "Account & Name")</th>
+                                    <th>@ViewText.T("Liên hệ", "Contact")</th>
+                                    <th>@ViewText.T("Ngày đăng ký", "Created At")</th>
+                                    <th>@ViewText.T("Trạng thái", "Status")</th>
+                                    <th class="text-end">@ViewText.T("Thao tác", "Action")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Model.Customers.Items)
+                                {
+                                    <tr class="@(!c.IsActive ? "table-light" : "")">
+                                        <td class="bs-wrap-anywhere">
+                                            <div class="fw-semibold">@c.UserName <span class="text-muted small">#@c.Id</span></div>
+                                            <div class="small text-secondary">
+                                                @(string.IsNullOrWhiteSpace(c.FullName)
+                                                    ? ViewText.T("Chưa cập nhật họ tên", "Full name not set")
+                                                    : c.FullName)
+                                            </div>
+                                        </td>
+                                        <td class="small bs-wrap-anywhere">
+                                            <div>@c.Email</div>
+                                            @if (!string.IsNullOrWhiteSpace(c.Phone))
+                                            {
+                                                <div class="text-secondary">@c.Phone</div>
+                                            }
+                                        </td>
+                                        <td class="small text-secondary text-nowrap">
+                                            @ViewText.FormatVietnamTime(c.CreatedAt)
+                                        </td>
+                                        <td class="bs-wrap-anywhere">
+                                            @if (c.IsActive)
+                                            {
+                                                <span class="badge bs-badge-instock">
+                                                    @ViewText.T("Đang hoạt động", "Active")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bs-badge-outstock">
+                                                    @ViewText.T("Đã khóa", "Locked")
+                                                </span>
+                                                @if (c.LockedAt.HasValue)
+                                                {
+                                                    <div class="small text-muted mt-1">
+                                                        @ViewText.FormatVietnamTime(c.LockedAt.Value)
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(c.LockReason))
+                                                {
+                                                    <div class="small text-danger mt-1">
+                                                        @ViewText.T("Lý do:", "Reason:") @c.LockReason
+                                                    </div>
+                                                }
+                                            }
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            @if (c.IsActive)
+                                            {
+                                                <a href="/admin/khach-hang/@c.Id/khoa" class="btn btn-sm btn-outline-danger">
+                                                    @ViewText.T("Khóa tài khoản", "Lock Account")
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <form method="post"
+                                                      action="/admin/khach-hang/@c.Id/mo-khoa"
+                                                      asp-antiforgery="true"
+                                                      data-confirm="@ViewText.T($"Xác nhận mở khóa tài khoản khách hàng \"{c.UserName}\" (#{c.Id})?", $"Confirm unlocking customer account \"{c.UserName}\" (#{c.Id})?")"
+                                                      data-prevent-double-submit="true"
+                                                      class="d-inline">
+                                                    <button type="submit" class="btn btn-sm bs-btn-primary">
+                                                        @ViewText.T("Mở khóa", "Unlock")
+                                                    </button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (Model.Customers.TotalPages > 1)
+        {
+            var currentPage = Model.Customers.Page;
+            var totalPages = Model.Customers.TotalPages;
+            var startPage = Math.Max(1, currentPage - 2);
+            var endPage = Math.Min(totalPages, currentPage + 2);
+
+            <nav class="mt-4" aria-label="@ViewText.T("Phân trang danh sách khách hàng", "Customers pagination")">
+                <ul class="pagination justify-content-center flex-wrap mb-0">
+                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                        <a class="page-link"
+                           href="@(currentPage <= 1 ? "#" : BuildPageUrl(currentPage - 1))"
+                           tabindex="@(currentPage <= 1 ? "-1" : null)"
+                           aria-disabled="@(currentPage <= 1 ? "true" : null)">
+                            @ViewText.T("Trước", "Previous")
+                        </a>
+                    </li>
+                    @if (startPage > 1)
+                    {
+                        <li class="page-item"><a class="page-link" href="@BuildPageUrl(1)">1</a></li>
+                        @if (startPage > 2)
+                        {
+                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                        }
+                    }
+                    @for (var p = startPage; p <= endPage; p++)
+                    {
+                        <li class="page-item @(p == currentPage ? "active" : "")" aria-current="@(p == currentPage ? "page" : null)">
+                            <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                        </li>
+                    }
+                    @if (endPage < totalPages)
+                    {
+                        @if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                        }
+                        <li class="page-item"><a class="page-link" href="@BuildPageUrl(totalPages)">@totalPages</a></li>
+                    }
+                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                        <a class="page-link"
+                           href="@(currentPage >= totalPages ? "#" : BuildPageUrl(currentPage + 1))"
+                           tabindex="@(currentPage >= totalPages ? "-1" : null)"
+                           aria-disabled="@(currentPage >= totalPages ? "true" : null)">
+                            @ViewText.T("Tiếp", "Next")
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/js/admin.js"></script>
+}

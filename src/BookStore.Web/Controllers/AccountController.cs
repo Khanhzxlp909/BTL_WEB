@@ -55,6 +55,15 @@ public sealed class AccountController(UserManager<ApplicationUser> users, SignIn
         if (!ModelState.IsValid) return InvalidForm(model);
         readiness.EnsureConfigured();
         var result = await signIn.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, lockoutOnFailure: true);
+        // NotAllowed chỉ xảy ra sau khi mật khẩu đã đúng (CanSignInAsync); báo khóa không lộ tồn tại tài khoản với người không biết mật khẩu.
+        if (result.IsNotAllowed)
+        {
+            ModelState.AddModelError("", ValidationText.Pick(
+                "Tài khoản đã bị quản trị viên khóa nên không thể đăng nhập. Liên hệ quản trị viên nhà sách để được xem xét mở khóa.",
+                "This account has been locked by an administrator. Contact the bookstore administrator to request unlocking."));
+            ViewData["ErrorCode"] = "ACCOUNT_LOCKED";
+            return InvalidForm(model, 403);
+        }
         if (!result.Succeeded)
         {
             ModelState.AddModelError("", ValidationText.Pick(

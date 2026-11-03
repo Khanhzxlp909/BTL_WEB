@@ -182,7 +182,16 @@ public sealed class ApplicationTests
         }
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/tai-khoan/ho-so")).StatusCode);
         var login = await BookStoreFactory.LoginAsync(client);
-        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, login.StatusCode);
+        Assert.Contains("ACCOUNT_LOCKED", await login.Content.ReadAsStringAsync());
+        // Sai mật khẩu với tài khoản bị khóa vẫn dùng thông báo chung, không lộ trạng thái tài khoản.
+        var wrong = await client.PostAsync("/tai-khoan/dang-nhap", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = await BookStoreFactory.TokenAsync(client, "/tai-khoan/dang-nhap"),
+            ["UserName"] = "reader", ["Password"] = "incorrect password"
+        }));
+        Assert.Equal(HttpStatusCode.Unauthorized, wrong.StatusCode);
+        Assert.DoesNotContain("ACCOUNT_LOCKED", await wrong.Content.ReadAsStringAsync());
     }
 
     [Fact]

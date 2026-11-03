@@ -8,6 +8,9 @@
 
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isAdmin = isAuthenticated && User.IsInRole(RoleNames.Admin);
+    var currentUserId = isAuthenticated
+        ? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? ""
+        : "";
     var isAdminRoute = currentPath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase);
     var currentSearch = Context.Request.Query["Search"].ToString();
     var isErrorView = ViewData.Model is ErrorViewModel;
@@ -24,8 +27,15 @@
     <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="/css/site.css" />
     <link rel="stylesheet" href="/css/admin.css" />
+    <link rel="stylesheet" href="/css/commerce.css" />
 </head>
-<body class="bs-body d-flex flex-column min-vh-100">
+<body class="bs-body d-flex flex-column min-vh-100"
+      data-authenticated="@(isAuthenticated ? "true" : "false")"
+      data-user-id="@currentUserId">
+    @if (isAuthenticated)
+    {
+        <div id="bs-csrf-token" class="d-none">@Html.AntiForgeryToken()</div>
+    }
     <header class="bs-header border-bottom">
         <div class="container py-2 py-lg-3">
             <div class="row g-2 align-items-center">
@@ -90,6 +100,12 @@
 
                     @if (isAuthenticated)
                     {
+                        <a href="/gio-hang"
+                           class="btn btn-sm bs-header-cart-link d-inline-flex align-items-center gap-1"
+                           aria-label="@ViewText.T("Giỏ hàng", "Shopping cart")">
+                            <span>@ViewText.T("Giỏ hàng", "Cart")</span>
+                            <span id="bs-header-cart-count" class="bs-cart-count-pill" data-cart-badge="true">0</span>
+                        </a>
                         <a href="/tai-khoan/ho-so" class="btn btn-sm btn-outline-secondary text-truncate bs-user-pill" title="@User.Identity?.Name">
                             @User.Identity?.Name
                         </a>
@@ -114,7 +130,7 @@
 
         <nav id="bsPrimaryNav" class="bs-subnav collapse d-lg-block border-top" aria-label="@ViewText.T("Điều hướng chính", "Main navigation")">
             <div class="container">
-                <ul class="nav flex-column flex-lg-row py-1 gap-lg-1">
+                <ul class="nav flex-column flex-lg-row flex-lg-wrap py-1 gap-lg-1">
                     <li class="nav-item">
                         <a class="nav-link bs-nav-link @(currentPath == "/" ? "active" : "")" href="/">
                             @ViewText.T("Trang chủ", "Home")
@@ -127,6 +143,16 @@
                     </li>
                     @if (isAuthenticated)
                     {
+                        <li class="nav-item">
+                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/gio-hang", StringComparison.OrdinalIgnoreCase) || currentPath.StartsWith("/dat-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/gio-hang">
+                                @ViewText.T("Giỏ hàng", "Cart")
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link bs-nav-link @(currentPath.StartsWith("/don-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/don-hang">
+                                @ViewText.T("Đơn hàng của tôi", "My Orders")
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link bs-nav-link @(currentPath.StartsWith("/tai-khoan/ho-so", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/tai-khoan/ho-so">
                                 @ViewText.T("Hồ sơ cá nhân", "My Profile")
@@ -157,6 +183,26 @@
                             <li class="nav-item">
                                 <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/kho", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/kho">
                                     @ViewText.T("Quản trị kho", "Manage Inventory")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/don-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/don-hang">
+                                    @ViewText.T("Đơn hàng", "Orders")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/danh-gia", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/danh-gia">
+                                    @ViewText.T("Đánh giá", "Reviews")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/khach-hang", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/khach-hang">
+                                    @ViewText.T("Khách hàng", "Customers")
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link bs-nav-link bs-nav-admin @(currentPath.StartsWith("/admin/bao-cao", StringComparison.OrdinalIgnoreCase) ? "active" : "")" href="/admin/bao-cao">
+                                    @ViewText.T("Báo cáo", "Reports")
                                 </a>
                             </li>
                         }
@@ -212,6 +258,7 @@
     <script src="/lib/jquery/jquery.min.js"></script>
     <script src="/lib/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="/js/site.js"></script>
+    <script src="/js/commerce.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -6,14 +6,11 @@
         ("Tổng quan & Tài khoản", "Overview & Accounts", "Thống kê 5 chỉ số cốt lõi, xác thực, phân quyền Admin/Customer, đa ngôn ngữ VI/EN", "5 core KPIs, authentication, Admin/Customer roles, VI/EN localization", "/admin"),
         ("Sách", "Books Management", "Thêm, sửa, ngừng bán, khôi phục và tải ảnh bìa sách", "Create, edit, soft-delete, restore books and upload covers", "/admin/sach"),
         ("Thể loại", "Categories", "Quản lý danh mục thể loại sách, kiểm tra ràng buộc sách tham chiếu", "Manage book categories with book reference checks", "/admin/the-loai"),
-        ("Kho", "Inventory", "Quản lý tồn kho, nhập kho kiểm soát cạnh tranh, lịch sử biến động và ngưỡng tồn thấp", "Stock levels, concurrency-safe imports, movement history, and low-stock threshold", "/admin/kho")
-    };
-    var upcomingModules = new (string Vi, string En, string NoteVi, string NoteEn)[]
-    {
-        ("Đơn hàng", "Orders", "Quản lý và xử lý trạng thái đơn hàng", "Order processing and status workflow"),
-        ("Đánh giá", "Reviews", "Kiểm duyệt ẩn/hiện đánh giá độc giả", "Moderate customer book reviews"),
-        ("Khách hàng", "Customers", "Tra cứu và khóa/mở khóa tài khoản khách", "Search and lock/unlock customer accounts"),
-        ("Báo cáo", "Revenue Reports", "Thống kê và báo cáo doanh thu", "Revenue analytics and reporting")
+        ("Kho", "Inventory", "Quản lý tồn kho, nhập kho kiểm soát cạnh tranh, lịch sử biến động và ngưỡng tồn thấp", "Stock levels, concurrency-safe imports, movement history, and low-stock threshold", "/admin/kho"),
+        ("Đơn hàng", "Orders", "Quản lý, lọc đơn hàng, xử lý giao hàng COD và hủy đơn hoàn giữ chỗ", "Search orders, advance COD delivery workflow, and cancel with stock release", "/admin/don-hang"),
+        ("Đánh giá", "Reviews", "Kiểm duyệt ẩn/hiện nhận xét độc giả giữ nguyên nội dung gốc", "Moderate visibility of customer book reviews without altering text", "/admin/danh-gia"),
+        ("Khách hàng", "Customers", "Tra cứu và khóa/mở khóa tài khoản khách hàng tức thời", "Search and lock/unlock customer accounts with immediate session revocation", "/admin/khach-hang"),
+        ("Báo cáo", "Revenue Reports", "Thống kê doanh thu theo khoảng ngày, biểu đồ cột và top 5 sách bán chạy", "Date-range revenue analytics, daily column chart, and top 5 best-sellers", "/admin/bao-cao")
     };
 }
 
@@ -37,7 +34,7 @@
                         </p>
                     </div>
                     <span class="badge bs-badge-category">
-                        @ViewText.T("Giai đoạn 2", "Phase 2")
+                        @ViewText.T("Hoạt động đầy đủ", "All Modules Active")
                     </span>
                 </div>
 
@@ -116,16 +113,6 @@
                                     <td class="small text-secondary">@ViewText.T(item.NoteVi, item.NoteEn)</td>
                                     <td class="text-end">
                                         <span class="badge bs-badge-instock">@ViewText.T("Đã hoạt động", "Active")</span>
-                                    </td>
-                                </tr>
-                            }
-                            @foreach (var item in upcomingModules)
-                            {
-                                <tr>
-                                    <td class="fw-medium">@ViewText.T(item.Vi, item.En)</td>
-                                    <td class="small text-secondary">@ViewText.T(item.NoteVi, item.NoteEn)</td>
-                                    <td class="text-end">
-                                        <span class="badge text-bg-light border">@ViewText.T("Giai đoạn tiếp theo", "Next phase")</span>
                                     </td>
                                 </tr>
                             }

@@ -1,0 +1,320 @@
+/* Commerce & Community UI styles (local, responsive down to 390px) */
+
+.bs-header-cart-link {
+    border-color: var(--bs-accent-forest);
+    color: var(--bs-accent-forest);
+    font-weight: 600;
+}
+
+.bs-header-cart-link:hover,
+.bs-header-cart-link:focus {
+    background-color: var(--bs-accent-forest);
+    border-color: var(--bs-accent-forest);
+    color: #ffffff;
+}
+
+.bs-cart-count-pill {
+    background-color: var(--bs-accent-forest);
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+.bs-header-cart-link:hover .bs-cart-count-pill,
+.bs-header-cart-link:focus .bs-cart-count-pill {
+    background-color: #ffffff;
+    color: var(--bs-accent-forest);
+}
+
+/* Keep add-to-cart controls above Bootstrap .stretched-link in _BookCard */
+.bs-card-cart-actions {
+    position: relative;
+    z-index: 2;
+}
+
+.bs-qty-input {
+    width: 4.25rem;
+    text-align: center;
+}
+
+.bs-qty-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    max-width: 100%;
+}
+
+.bs-qty-stepper .bs-qty-input {
+    border-radius: 0;
+    width: 4rem;
+}
+
+.bs-qty-stepper .btn:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.bs-qty-stepper .btn:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+/* Cart table & responsive mobile card view (<768px / 390px) */
+.bs-cart-thumb {
+    width: 3.75rem;
+    height: 5rem;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    border: 1px solid var(--bs-border-warm);
+    background-color: #f2ece1;
+    flex-shrink: 0;
+}
+
+.bs-cart-thumb-placeholder {
+    width: 3.75rem;
+    height: 5rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--bs-border-warm);
+    background: linear-gradient(160deg, #24473a 0%, #183228 100%);
+    color: #f6f1e7;
+    font-size: 0.68rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.25rem;
+    flex-shrink: 0;
+}
+
+.bs-cart-table th {
+    background-color: #f6f1e7;
+    color: var(--bs-ink-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.bs-cart-summary-card {
+    background-color: #fbf9f5;
+    border: 1px solid var(--bs-border-warm);
+}
+
+.bs-badge-price-changed {
+    background-color: #fff3cd;
+    color: #664d03;
+    border: 1px solid #ffecb5;
+    font-weight: 600;
+}
+
+/* Order & Payment status badges (color + explicit VI/EN text) */
+.bs-status-pending {
+    background-color: #fff3cd;
+    color: #664d03;
+    border: 1px solid #ffecb5;
+    font-weight: 600;
+}
+
+.bs-status-confirmed {
+    background-color: #cff4fc;
+    color: #055160;
+    border: 1px solid #9eeaf9;
+    font-weight: 600;
+}
+
+.bs-status-shipping {
+    background-color: #cfe2ff;
+    color: #084298;
+    border: 1px solid #9ec5fe;
+    font-weight: 600;
+}
+
+.bs-status-delivered {
+    background-color: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+    font-weight: 600;
+}
+
+.bs-status-cancelled {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f1aeb5;
+    font-weight: 600;
+}
+
+.bs-payment-unpaid {
+    background-color: #f4efe6;
+    color: #5c4b32;
+    border: 1px solid #dfd5c3;
+    font-weight: 600;
+}
+
+.bs-payment-paid {
+    background-color: #e3f1e8;
+    color: #1b5e3a;
+    border: 1px solid #badbcc;
+    font-weight: 600;
+}
+
+.bs-badge-hidden-review {
+    background-color: #f8e5e5;
+    color: #8b2626;
+    border: 1px solid #f1aeb5;
+    font-weight: 600;
+}
+
+/* Order Event Timeline */
+.bs-timeline {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+    position: relative;
+}
+
+.bs-timeline-item {
+    position: relative;
+    padding-left: 1.5rem;
+    padding-bottom: 1rem;
+    border-left: 2px solid var(--bs-border-warm);
+    margin-left: 0.5rem;
+}
+
+.bs-timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.bs-timeline-dot {
+    position: absolute;
+    left: -0.45rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: var(--bs-accent-forest);
+    border: 2px solid #ffffff;
+}
+
+/* Revenue Column Chart (local CSS columns, scrollable on small viewports) */
+.bs-revenue-chart-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    padding-bottom: 0.5rem;
+}
+
+.bs-revenue-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    min-height: 14rem;
+    padding: 0.75rem 0.5rem 0.25rem;
+    background-color: #fbf9f5;
+    border: 1px solid var(--bs-border-warm);
+    border-radius: 0.5rem;
+    width: max-content;
+    min-width: 100%;
+}
+
+.bs-chart-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 2.85rem;
+    flex: 1 0 2.85rem;
+}
+
+.bs-chart-val {
+    font-size: 0.68rem;
+    color: var(--bs-ink-muted);
+    white-space: nowrap;
+    margin-bottom: 0.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.bs-chart-bar-track {
+    width: 1.5rem;
+    height: 9.5rem;
+    display: flex;
+    align-items: flex-end;
+    background-color: #efeae0;
+    border-radius: 0.25rem 0.25rem 0 0;
+    border-bottom: 2px solid #cfc6b5;
+    overflow: hidden;
+}
+
+.bs-chart-bar {
+    width: 100%;
+    background: linear-gradient(180deg, #2b6a53 0%, #1f4e3d 100%);
+    border-radius: 0.25rem 0.25rem 0 0;
+    min-height: 3px;
+}
+
+.bs-chart-bar-zero {
+    width: 100%;
+    height: 0;
+    min-height: 0;
+}
+
+.bs-chart-date {
+    font-size: 0.7rem;
+    color: var(--bs-ink-primary);
+    margin-top: 0.35rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.bs-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+@media (max-width: 767.98px) {
+    .bs-cart-table thead {
+        display: none;
+    }
+
+    .bs-cart-table,
+    .bs-cart-table tbody,
+    .bs-cart-table tr,
+    .bs-cart-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .bs-cart-table tr {
+        border: 1px solid var(--bs-border-warm);
+        border-radius: 0.5rem;
+        padding: 0.85rem;
+        margin-bottom: 0.85rem;
+        background-color: var(--bs-surface-bg);
+    }
+
+    .bs-cart-table td {
+        border: 0;
+        padding: 0.35rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .bs-cart-table td.bs-cart-cell-book {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding-bottom: 0.6rem;
+        border-bottom: 1px solid var(--bs-border-warm);
+        margin-bottom: 0.25rem;
+    }
+
+    .bs-cart-table td[data-label]::before {
+        content: attr(data-label);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--bs-ink-muted);
+    }
+}

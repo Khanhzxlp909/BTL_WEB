@@ -95,6 +95,9 @@ docker compose --profile test run --rm --build test
   chỉ DB test này được tạo/xóa. Không chạm DB `BookStore`.
 - Bài này kiểm tra hai yêu cầu nhập cùng rowversion: chỉ một thành công; tồn
   và lịch sử nhất quán; lỗi ghi lịch sử phải rollback tồn.
+- Có thêm kiểm thử SQL Server tranh cuốn cuối, cùng xác nhận không tạo hai đơn,
+  rollback khi lỗi đặt/giao/hủy và báo cáo theo ngày Việt Nam. Tổng nghiệm thu
+  30/10/2026: 69/69 PASS, gồm 7 bài SQL Server tách biệt.
 - Test mặc định `pnpm test` trên host bỏ qua bài SQL Server nếu thiếu
   `BOOKSTORE_TEST_SQLSERVER`; không tự lấy kết nối ứng dụng.
 

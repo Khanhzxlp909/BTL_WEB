@@ -1,0 +1,13 @@
+@model OrderStatus
+@{
+    var cssClass = Model switch
+    {
+        OrderStatus.PENDING => "bs-status-pending",
+        OrderStatus.CONFIRMED => "bs-status-confirmed",
+        OrderStatus.SHIPPING => "bs-status-shipping",
+        OrderStatus.DELIVERED => "bs-status-delivered",
+        OrderStatus.CANCELLED => "bs-status-cancelled",
+        _ => "text-bg-secondary"
+    };
+}
+<span class="badge @cssClass">@await Html.PartialAsync("_OrderStatusText", Model)</span>

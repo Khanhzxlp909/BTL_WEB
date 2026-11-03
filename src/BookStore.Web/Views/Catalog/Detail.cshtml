@@ -4,6 +4,16 @@
     ViewData["Title"] = book.Title;
     var hasDiscount = book.DiscountPrice.HasValue && book.DiscountPrice.Value < book.Price;
     var inStock = book.AvailableQuantity > 0;
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isCustomerReviewer = isAuthenticated
+        && User.IsInRole(RoleNames.Customer)
+        && !User.IsInRole(RoleNames.Admin);
+    var currentReturnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    if (string.IsNullOrWhiteSpace(currentReturnUrl) || !Url.IsLocalUrl(currentReturnUrl))
+    {
+        currentReturnUrl = $"/sach/{book.Id}";
+    }
+    var loginToBuyUrl = $"/tai-khoan/dang-nhap?ReturnUrl={Uri.EscapeDataString(currentReturnUrl)}";
 }
 
 <nav aria-label="breadcrumb" class="mb-3">
@@ -68,6 +78,78 @@
                     </div>
                 </div>
 
+                <div class="p-3 rounded-3 border bg-light-subtle mb-4" data-book-id="@book.Id">
+                    @if (!inStock)
+                    {
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <span class="small text-secondary">
+                                @ViewText.T("Đầu sách này hiện tạm hết tồn kho khả dụng.", "This title currently has no available stock.")
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-book-id="@book.Id" disabled>
+                                @ViewText.T("Tạm hết hàng", "Out of stock")
+                            </button>
+                        </div>
+                    }
+                    else if (isAuthenticated)
+                    {
+                        <form method="post"
+                              action="/api/cart/items"
+                              asp-antiforgery="true"
+                              data-cart-add-form="true"
+                              data-book-id="@book.Id"
+                              novalidate>
+                            <div class="d-flex flex-wrap align-items-end gap-2">
+                                <div>
+                                    <label for="detail-qty-@book.Id" class="form-label small fw-semibold mb-1">
+                                        @ViewText.T("Số lượng mua", "Quantity")
+                                    </label>
+                                    <div class="bs-qty-stepper">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                data-qty-step="-1"
+                                                aria-label="@ViewText.T("Giảm số lượng", "Decrease quantity")">&minus;</button>
+                                        <input id="detail-qty-@book.Id"
+                                               type="number"
+                                               name="quantity"
+                                               value="1"
+                                               min="1"
+                                               max="@book.AvailableQuantity"
+                                               step="1"
+                                               inputmode="numeric"
+                                               class="form-control form-control-sm bs-qty-input" />
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                data-qty-step="1"
+                                                aria-label="@ViewText.T("Tăng số lượng", "Increase quantity")">+</button>
+                                    </div>
+                                </div>
+                                <button type="submit"
+                                        class="btn btn-sm bs-btn-primary px-4 py-2"
+                                        data-book-id="@book.Id">
+                                    @ViewText.T("Thêm vào giỏ hàng", "Add to Cart")
+                                </button>
+                                <a href="/gio-hang" class="btn btn-sm btn-outline-secondary py-2">
+                                    @ViewText.T("Đến giỏ hàng", "Go to Cart")
+                                </a>
+                            </div>
+                            <div data-cart-feedback="true" class="d-none"></div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <span class="small text-secondary">
+                                @ViewText.T("Đăng nhập để thêm sách vào giỏ và đặt hàng COD.", "Sign in to add this book to your cart and place a COD order.")
+                            </span>
+                            <a href="@loginToBuyUrl"
+                               class="btn btn-sm bs-btn-primary px-3"
+                               data-book-id="@book.Id">
+                                @ViewText.T("Đăng nhập để thêm vào giỏ", "Sign in to add to cart")
+                            </a>
+                        </div>
+                    }
+                </div>
+
                 <dl class="row small bs-meta-grid mb-4">
                     <dt class="col-sm-4 text-secondary">@ViewText.T("Mã SKU", "SKU")</dt>
                     <dd class="col-sm-8"><code>@book.SKU</code></dd>
@@ -119,9 +201,17 @@
             <h2 id="book-reviews-heading" class="h4 bs-serif-heading mb-0">
                 @ViewText.T("Đánh giá từ độc giả", "Reader Reviews")
             </h2>
-            <span class="badge text-bg-light border">
-                @Model.ReviewCount @ViewText.T("nhận xét", "reviews")
-            </span>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="badge text-bg-light border">
+                    @Model.ReviewCount @ViewText.T("nhận xét", "reviews")
+                </span>
+                @if (isCustomerReviewer)
+                {
+                    <a href="/sach/@book.Id/danh-gia" class="btn btn-sm bs-btn-primary">
+                        @ViewText.T("Viết / sửa đánh giá", "Write / Edit Review")
+                    </a>
+                }
+            </div>
         </div>
 
         @if (Model.Reviews.Count == 0)

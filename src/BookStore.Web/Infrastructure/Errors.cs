@@ -83,6 +83,11 @@ public sealed class ErrorMiddleware(RequestDelegate next, ILogger<ErrorMiddlewar
                 "AdminBooks" or "AdminBooksApi" => ValidationText.Pick("quản trị thông tin sách và ảnh bìa", "manage book details and cover images"),
                 "AdminCategories" => ValidationText.Pick("quản trị thể loại sách", "manage book categories"),
                 "Inventory" => ValidationText.Pick("cập nhật hoặc tra cứu kho sách", "update or query book inventory"),
+                "Cart" or "CartApi" => ValidationText.Pick("cập nhật hoặc đọc giỏ hàng", "update or read the shopping cart"),
+                "Checkout" or "Orders" or "OrdersApi" or "AdminOrders" or "AdminOrdersApi" => ValidationText.Pick("đặt hàng hoặc xử lý trạng thái đơn COD", "place or process a COD order"),
+                "Reviews" or "AdminReviews" => ValidationText.Pick("lưu hoặc kiểm duyệt đánh giá sách", "save or moderate a book review"),
+                "Customers" => ValidationText.Pick("tra cứu hoặc khóa/mở tài khoản khách hàng", "query or lock/unlock customer accounts"),
+                "Reports" => ValidationText.Pick("tổng hợp báo cáo doanh thu theo ngày Việt Nam", "aggregate revenue by Vietnamese calendar date"),
                 "Language" => ValidationText.Pick("lưu lựa chọn ngôn ngữ", "save the selected language"),
                 _ => ValidationText.Pick("xử lý địa chỉ được yêu cầu", "process the requested endpoint")
             };

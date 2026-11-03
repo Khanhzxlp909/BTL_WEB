@@ -1,0 +1,34 @@
+@model OrderListViewModel
+@{
+    ViewData["Title"] = ViewText.T("Đơn hàng của tôi", "My Orders");
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@ViewText.T("Trang chủ", "Home")</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@ViewText.T("Đơn hàng của tôi", "My Orders")</li>
+    </ol>
+</nav>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 bs-serif-heading mb-1">
+            @ViewText.T("Lịch sử đơn hàng của tôi", "My Order History")
+        </h1>
+        <p class="text-secondary small mb-0">
+            @ViewText.T(
+                "Theo dõi trạng thái xử lý, thanh toán COD và chi tiết từng đơn hàng của tài khoản hiện tại.",
+                "Track processing status, COD payment, and snapshot details for your account's orders.")
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="/gio-hang" class="btn btn-sm btn-outline-secondary">
+            @ViewText.T("Giỏ hàng", "Cart")
+        </a>
+        <a href="/sach" class="btn btn-sm bs-btn-primary">
+            @ViewText.T("Mua thêm sách", "Shop Books")
+        </a>
+    </div>
+</div>
+
+@await Html.PartialAsync("_OrderListContent", Model)

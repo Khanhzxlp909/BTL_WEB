@@ -1,0 +1,9 @@
+@model PaymentStatus
+@{
+    var isPaid = Model == PaymentStatus.PAID;
+    var cssClass = isPaid ? "bs-payment-paid" : "bs-payment-unpaid";
+    var label = isPaid
+        ? ViewText.T("Đã thanh toán", "Paid")
+        : ViewText.T("Chưa thanh toán (COD)", "Unpaid (COD)");
+}
+<span class="badge @cssClass">@label</span>

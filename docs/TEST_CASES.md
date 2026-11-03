@@ -1,7 +1,9 @@
 # Kiểm thử BookStore
 
-Ngày 2026-10-26: `pnpm test` **47 PASS, 1 SKIP** (SQL Server opt-in).
-`docker compose --profile test run --rm test`: **48/48 PASS**, không bỏ qua.
+Nghiệm thu 2026-10-30: `docker compose --profile test run --rm --build test`:
+**69/69 PASS**, không bỏ qua; build **0 warning, 0 error**.
+Host không có `BOOKSTORE_TEST_SQLSERVER`: 62 bài dùng SQLite/kiểm tra độc lập,
+7 bài SQL Server opt-in được bỏ qua.
 Đầu vào giả lập, SQLite in-memory riêng mỗi bài; SQL Server dùng DB
 `BookStoreTest_<GUID>` mới, xóa đúng DB test sau bài. Không dữ liệu thật.
 
@@ -83,11 +85,49 @@ Ngày 2026-10-26: `pnpm test` **47 PASS, 1 SKIP** (SQL Server opt-in).
   `BookStore`; không chạy migration/initialize vào DB ứng dụng.
 - Không phát sinh thay đổi schema; EF báo không có model change ngoài migration.
 
+## Giai đoạn 3 — 21 bài bổ sung
+
+| Mã | Kiểm thử | Kết quả |
+|---|---|---|
+| TC49 | Giỏ cộng dồn một dòng, chính chủ, phiên khác cùng user, sửa 0 là xóa; không giữ chỗ | PASS |
+| TC50–52 | Thêm số lượng 0/âm/vượt khả dụng | PASS; 400/409, giỏ giữ nguyên |
+| TC53 | Giá đổi sau báo giá; token giả; replay xác nhận | PASS; yêu cầu giá mới, token giả bị từ chối, replay một đơn |
+| TC54 | Điện thoại sai, chưa xác nhận COD, giỏ đổi sau báo giá | PASS; không tạo đơn |
+| TC55 | Đúng trình tự trạng thái, COD bắt buộc, không trừ hai lần, snapshot khi sách sửa/ngừng bán | PASS |
+| TC56 | Hủy chính chủ, lý do Admin, hủy lặp | PASS; hoàn giữ chỗ một lần |
+| TC57 | MVC giỏ/checkout/lịch sử/Admin render; báo giá mới giữ người nhận và yêu cầu xác nhận lại | PASS |
+| TC58 | Giá 9.007.199.254.740.993đ trong JSON | PASS; trường text giữ nguyên đồng ngoài Number.MAX_SAFE_INTEGER |
+| TC59 | Sách ngừng bán sau khi xem báo giá | PASS; không đơn, giỏ và giữ chỗ không đổi |
+| TC60 | Admin hủy đơn riêng qua endpoint chính chủ | PASS; vẫn bắt buộc lý do |
+| TC61 | Đánh giá cần DELIVERED; upsert cùng đánh giá; sửa khi ẩn; kiểm duyệt lặp | PASS |
+| TC62 | Khóa có lý do, không khóa Admin, vô hiệu hóa phiên, mở khóa đăng nhập lại | PASS |
+| TC63 | Báo cáo theo DeliveredAt/CancelledAt UTC+7, ngày 0, top sách, khoảng sai không hiển thị số liệu | PASS |
+| TC64 | SQL Server: hai khách tranh cuốn cuối | PASS; một đơn, tồn không âm |
+| TC65 | SQL Server: đồng thời cùng xác nhận; hủy/giao lặp | PASS; một đơn/token, biến động đúng một lần |
+| TC66 | SQL Server: trigger gây lỗi history khi đặt | PASS; rollback đơn, dòng đơn, timeline, giữ chỗ và giỏ |
+| TC67 | SQL Server: query báo cáo dịch SQL, biên 00:00 Việt Nam | PASS |
+| TC68 | SQL Server: trigger lỗi history giao | PASS; rollback trạng thái/thanh toán/ngày giao/tồn/giữ chỗ |
+| TC69 | SQL Server: trigger lỗi history hủy | PASS; rollback trạng thái/ngày hủy/hoàn giữ chỗ |
+
+### Trình duyệt giao dịch
+
+- Kestrel + SQLite in-memory riêng: Customer thêm sách bằng jQuery AJAX tại
+  chi tiết, mở giỏ và checkout COD; tạo một đơn, hiển thị snapshot/timeline.
+- Admin xác nhận, chuyển đang giao, xác nhận thu COD rồi đánh dấu đã giao.
+  Báo cáo ghi 80.000đ, 1 đơn, top 1 sách; giá trị từ dữ liệu test thật.
+- Giỏ, chi tiết đơn, báo cáo viewport 390px không tràn ngang.
+- Lỗi báo cáo ngày: 400, giữ ngày và thông báo; sau nghiệm thu UI ẩn toàn bộ
+  metrics/chart/table để không hiểu nhầm là báo cáo bằng 0.
+- AJAX tiền dùng chuỗi server format; badge giỏ lỗi mạng/401 hiện trạng thái
+  chưa xác định và mô tả, không giả số lượng 0.
+- Trình duyệt mô phỏng mất kết nối GET /api/cart: badge hiện `?` kèm lý do;
+  kết nối phục hồi hiện 0 thực và gỡ trạng thái lỗi. Không ghi DB trong bài này.
+- Giỏ AJAX browser: nhập -1/1.5/999 trong khi tồn khả dụng 7 đều giữ lại số 1
+  đã lưu; đổi hợp lệ sang 2 rồi nhập sai trả về 2; nhập 0 xóa dòng không reload.
+
 ## Chưa xác minh / còn lại
 
-- Đã chứng minh rowversion nhập kho/rollback và migration SQL Server. Chưa
-  kiểm chứng tranh tồn đặt đơn vì module đơn chưa triển khai.
-- Các module chưa triển khai chưa được kiểm thử.
 - Luồng UI có dữ liệu dùng SQLite tách biệt; runtime SQL Server đã kiểm tra qua
-  migration/concurrency test, chưa khởi tạo DB ứng dụng.
+  migration, cạnh tranh/rollback và báo cáo, chưa chạy bài browser trên DB ứng dụng.
 - CSS/HTML ứng dụng chỉ dùng tài nguyên nội bộ, không nạp font ngoài và giữ nguyên chính sách CSP.
+- Chưa benchmark tải lớn và chưa nghiệm thu triển khai production.

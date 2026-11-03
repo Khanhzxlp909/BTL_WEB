@@ -1,0 +1,10 @@
+@model OrderStatus
+@(Model switch
+{
+    OrderStatus.PENDING => ViewText.T("Chờ xác nhận", "Pending confirmation"),
+    OrderStatus.CONFIRMED => ViewText.T("Đã xác nhận", "Confirmed"),
+    OrderStatus.SHIPPING => ViewText.T("Đang giao hàng", "Shipping"),
+    OrderStatus.DELIVERED => ViewText.T("Đã giao hàng", "Delivered"),
+    OrderStatus.CANCELLED => ViewText.T("Đã hủy", "Cancelled"),
+    _ => Model.ToString()
+})

@@ -1,0 +1,33 @@
+@model string?
+@{
+    var errorCode = ViewData["ErrorCode"] as string;
+    var traceId = ViewData["TraceId"] as string;
+    var hasError = !ViewData.ModelState.IsValid || !string.IsNullOrWhiteSpace(errorCode);
+    var heading = !string.IsNullOrWhiteSpace(Model)
+        ? Model
+        : ViewText.T(
+            "Không thể hoàn tất thao tác. Vui lòng kiểm tra chi tiết bên dưới:",
+            "Unable to complete the request. Please review the details below:");
+}
+@if (hasError)
+{
+    <div class="alert alert-danger bs-wrap-anywhere mb-4" role="alert">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+            <strong>@heading</strong>
+            @if (!string.IsNullOrWhiteSpace(errorCode))
+            {
+                <code class="bs-error-code">@errorCode</code>
+            }
+        </div>
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="small mb-0"></div>
+        }
+        @if (!string.IsNullOrWhiteSpace(traceId))
+        {
+            <div class="small text-secondary mt-2">
+                @ViewText.T("Mã tra cứu (TraceId):", "Reference ID (TraceId):") <code>@traceId</code>
+            </div>
+        }
+    </div>
+}

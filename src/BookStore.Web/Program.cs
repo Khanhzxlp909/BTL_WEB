@@ -18,6 +18,11 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IAdminCatalogService, AdminCatalogService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICoverImageStorage, CoverImageStorage>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<CheckoutQuotes>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICommunityService, CommunityService>();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
 {
     options.User.RequireUniqueEmail = true;

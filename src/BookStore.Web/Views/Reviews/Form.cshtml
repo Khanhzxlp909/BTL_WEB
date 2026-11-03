@@ -1,0 +1,101 @@
+@model ReviewFormViewModel
+@{
+    ViewData["Title"] = ViewText.T($"Đánh giá sách — {Model.BookTitle}", $"Review Book — {Model.BookTitle}");
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@ViewText.T("Trang chủ", "Home")</a></li>
+        <li class="breadcrumb-item"><a href="/sach" class="text-decoration-none">@ViewText.T("Sách", "Books")</a></li>
+        <li class="breadcrumb-item"><a href="/sach/@Model.BookId" class="text-decoration-none">@Model.BookTitle</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@ViewText.T("Đánh giá", "Review")</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        @await Html.PartialAsync("_FormErrorBanner", ViewText.T("Không thể lưu đánh giá. Vui lòng kiểm tra chi tiết bên dưới:", "Could not save your review. Please review the details below:"))
+
+        @if (Model.IsHidden)
+        {
+            <div class="alert alert-warning mb-4" role="status">
+                <div class="fw-semibold mb-1">
+                    @ViewText.T("Đánh giá đang ở trạng thái ẩn / chờ kiểm duyệt", "Review currently hidden / awaiting moderation")
+                </div>
+                <div class="small mb-0">
+                    @ViewText.T(
+                        "Đánh giá của bạn cho đầu sách này hiện đang bị ẩn khỏi trang công khai để chờ quản trị viên kiểm duyệt. Khi bạn chỉnh sửa và lưu lại, trạng thái ẩn vẫn được giữ nguyên cho tới khi quản trị viên cho phép hiển thị.",
+                        "Your review for this book is currently hidden from public view pending administrator moderation. Saving changes keeps the review hidden until an administrator makes it visible.")
+                </div>
+            </div>
+        }
+
+        <section class="card bs-surface-card">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+                    <div>
+                        <div class="small text-secondary mb-1">
+                            @ViewText.T("Viết / cập nhật đánh giá độc giả", "Write / Update Reader Review")
+                        </div>
+                        <h1 class="h3 bs-serif-heading mb-0 bs-wrap-anywhere">@Model.BookTitle</h1>
+                    </div>
+                    <a href="/sach/@Model.BookId" class="btn btn-sm btn-outline-secondary">
+                        &larr; @ViewText.T("Quay lại trang sách", "Back to Book")
+                    </a>
+                </div>
+
+                <form method="post"
+                      action="/sach/@Model.BookId/danh-gia"
+                      asp-antiforgery="true"
+                      data-prevent-double-submit="true"
+                      novalidate>
+                    <div class="mb-3">
+                        <label asp-for="Input.Rating" class="form-label fw-semibold">
+                            @ViewText.T("Mức điểm đánh giá (1 - 5 sao)", "Star Rating (1 - 5 stars)") <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Input.Rating" class="form-select" required>
+                            <option value="5">5 / 5 &mdash; @ViewText.T("Rất hài lòng / Xuất sắc", "Excellent")</option>
+                            <option value="4">4 / 5 &mdash; @ViewText.T("Hài lòng / Tốt", "Good")</option>
+                            <option value="3">3 / 5 &mdash; @ViewText.T("Bình thường / Khá", "Average")</option>
+                            <option value="2">2 / 5 &mdash; @ViewText.T("Chưa hài lòng", "Below average")</option>
+                            <option value="1">1 / 5 &mdash; @ViewText.T("Không hài lòng", "Poor")</option>
+                        </select>
+                        <span asp-validation-for="Input.Rating" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Input.Comment" class="form-label fw-semibold">
+                            @ViewText.T("Nội dung nhận xét", "Review Comment") <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="Input.Comment"
+                                  class="form-control"
+                                  rows="5"
+                                  maxlength="1000"
+                                  placeholder="@ViewText.T("Chia sẻ cảm nhận thực tế của bạn về nội dung, bản dịch, chất lượng in ấn...", "Share your honest impressions of the content, edition, and print quality...")"
+                                  required></textarea>
+                        <div class="form-text small">
+                            @ViewText.T(
+                                "Tối đa 1.000 ký tự. Mỗi khách hàng đã nhận sách (đơn Đã giao hàng) có một đánh giá cho mỗi đầu sách và có thể cập nhật lại.",
+                                "Up to 1,000 characters. Customers with a Delivered order for this book may submit one review per book and update it anytime.")
+                        </div>
+                        <span asp-validation-for="Input.Comment" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-top pt-3">
+                        <a href="/don-hang" class="btn btn-sm btn-outline-secondary">
+                            @ViewText.T("Xem đơn hàng của tôi", "View My Orders")
+                        </a>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/sach/@Model.BookId" class="btn btn-outline-secondary">
+                                @ViewText.T("Hủy", "Cancel")
+                            </a>
+                            <button type="submit" class="btn bs-btn-primary px-4">
+                                @ViewText.T("Lưu đánh giá", "Save Review")
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>

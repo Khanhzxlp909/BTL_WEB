@@ -33,17 +33,21 @@ public sealed class AdminBooksController(IAdminCatalogService catalog) : Control
     public Task<IActionResult> Edit(int id, BookFormViewModel model, CancellationToken ct) => Save(id, model, ct);
 
     [HttpPost("{id:int}/ngung-ban")]
-    public async Task<IActionResult> Stop(int id, CancellationToken ct)
-    {
-        await catalog.SetBookDeletedAsync(id, true, ct);
-        TempData["Success"] = ValidationText.Pick("Đã ngừng bán sách; tồn kho và lịch sử được giữ nguyên.", "The book is no longer for sale; stock and history are preserved.");
-        return RedirectToAction(nameof(Index));
-    }
+    public Task<IActionResult> Stop(int id, CancellationToken ct) => SetStatus(id, true,
+        ValidationText.Pick("Đã ngừng bán sách; tồn kho và lịch sử được giữ nguyên.", "The book is no longer for sale; stock and history are preserved."), ct);
     [HttpPost("{id:int}/khoi-phuc")]
-    public async Task<IActionResult> Restore(int id, CancellationToken ct)
+    public Task<IActionResult> Restore(int id, CancellationToken ct) => SetStatus(id, false,
+        ValidationText.Pick("Đã khôi phục sách đang bán.", "The book is back on sale."), ct);
+
+    // Lỗi nghiệp vụ (đã ở trạng thái đích, thể loại ngừng dùng) hiển thị trên danh sách; 404/5xx vẫn đi qua middleware lỗi chung.
+    private async Task<IActionResult> SetStatus(int id, bool deleted, string success, CancellationToken ct)
     {
-        await catalog.SetBookDeletedAsync(id, false, ct);
-        TempData["Success"] = ValidationText.Pick("Đã khôi phục sách đang bán.", "The book is back on sale.");
+        try
+        {
+            await catalog.SetBookDeletedAsync(id, deleted, ct);
+            TempData["Success"] = success;
+        }
+        catch (AppException ex) when (ex.StatusCode == 409) { TempData["Error"] = $"{ex.Message} ({ex.Error.Code})"; }
         return RedirectToAction(nameof(Index));
     }
 

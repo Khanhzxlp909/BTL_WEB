@@ -93,7 +93,11 @@ public sealed class AdminCatalogService(BookStoreDbContext db, DatabaseReadiness
         readiness.EnsureConfigured();
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var book = await db.Books.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw AdminErrors.BookMissing(id);
-        if (book.IsDeleted != deleted)
+        if (book.IsDeleted == deleted) throw new AppException(409, deleted ? "BOOK_ALREADY_STOPPED" : "BOOK_NOT_STOPPED", ValidationText.Pick(
+            deleted ? $"Sách #{id} ({book.SKU}) đã ở trạng thái ngừng bán; không có thay đổi. Tải lại danh sách để xem trạng thái hiện tại."
+                    : $"Sách #{id} ({book.SKU}) đang được bán, không cần khôi phục. Tải lại danh sách để xem trạng thái hiện tại.",
+            deleted ? $"Book #{id} ({book.SKU}) is already stopped; nothing changed. Reload the list to see its current status."
+                    : $"Book #{id} ({book.SKU}) is already on sale and needs no restoring. Reload the list to see its current status."));
         {
             if (!deleted && !await db.Categories.AnyAsync(x => x.Id == book.CategoryId && !x.IsDeleted, ct))
                 throw AdminErrors.Field("BOOK_CATEGORY_UNAVAILABLE", "CategoryId", ValidationText.Pick("Không thể khôi phục sách vì thể loại không hoạt động. Sửa sách sang thể loại đang hoạt động trước.", "The category is inactive. Assign an active category before restoring the book."), 409);

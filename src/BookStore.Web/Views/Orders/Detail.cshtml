@@ -1,0 +1,14 @@
+@model OrderDetailViewModel
+@{
+    ViewData["Title"] = ViewText.T($"Đơn hàng {Model.Order.OrderCode}", $"Order {Model.Order.OrderCode}");
+}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none">@ViewText.T("Trang chủ", "Home")</a></li>
+        <li class="breadcrumb-item"><a href="/don-hang" class="text-decoration-none">@ViewText.T("Đơn hàng của tôi", "My Orders")</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Order.OrderCode</li>
+    </ol>
+</nav>
+
+@await Html.PartialAsync("_OrderDetailContent", Model)
