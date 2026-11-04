@@ -1,0 +1,67 @@
+@model OrderPlacedViewModel
+@{
+    ViewData["Title"] = ViewText.T($"Đặt hàng thành công — {Model.OrderCode}", $"Order Placed — {Model.OrderCode}");
+    var detailUrl = $"/don-hang/{Model.Id}";
+}
+
+<section class="row justify-content-center py-4" aria-labelledby="order-success-heading">
+    <div class="col-12 col-md-9 col-lg-7">
+        <div class="bs-order-success-card text-center">
+            <img src="/images/order-seal.svg"
+                 alt="@ViewText.T("Xác nhận đơn hàng", "Order Confirmed")"
+                 class="bs-order-seal-img mb-3" />
+
+            <h1 id="order-success-heading" class="h3 bs-serif-heading fw-bold mb-2">
+                @ViewText.T("Đặt hàng thành công", "Order Placed Successfully")
+            </h1>
+            <p class="text-secondary small mb-4">
+                @ViewText.T(
+                    "Cảm ơn bạn đã mua sách tại BookStore. Đơn hàng của bạn đã được ghi nhận và giữ chỗ tồn kho.",
+                    "Thank you for shopping with BookStore. Your order has been recorded and stock has been reserved.")
+            </p>
+
+            <div class="row g-3 text-start mb-4">
+                <div class="col-12 col-sm-6">
+                    <div class="p-3 rounded-2 border bg-light h-100">
+                        <div class="small text-secondary mb-1">@ViewText.T("Mã đơn hàng", "Order Code")</div>
+                        <div class="fs-5 fw-bold"><code id="order-placed-code">@Model.OrderCode</code></div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="p-3 rounded-2 border bg-light h-100">
+                        <div class="small text-secondary mb-1">@ViewText.T("Tổng thanh toán", "Total Amount")</div>
+                        <div id="order-placed-total" class="fs-5 fw-bold bs-price-current bs-tabular">@Model.TotalAmountText</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="p-3 rounded-2 border bg-light h-100">
+                        <div class="small text-secondary mb-1">@ViewText.T("Phương thức thanh toán", "Payment Method")</div>
+                        <div class="fw-semibold small">@Model.PaymentMethod &mdash; @ViewText.T("Thanh toán khi nhận hàng (COD)", "Cash on Delivery (COD)")</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="p-3 rounded-2 border bg-light h-100">
+                        <div class="small text-secondary mb-1">@ViewText.T("Thời gian đặt", "Created At")</div>
+                        <div class="fw-semibold small bs-tabular">
+                            <time datetime="@Model.CreatedAt.ToString("O", CultureInfo.InvariantCulture)">
+                                @ViewText.FormatVietnamTime(Model.CreatedAt)
+                            </time>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="@detailUrl" class="btn bs-btn-primary px-4">
+                    @ViewText.T("Xem chi tiết đơn hàng", "View Order Details")
+                </a>
+                <a href="/don-hang" class="btn btn-outline-secondary">
+                    @ViewText.T("Đơn hàng của tôi", "My Orders")
+                </a>
+                <a href="/sach" class="btn btn-outline-secondary">
+                    @ViewText.T("Tiếp tục mua sách", "Continue Shopping")
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

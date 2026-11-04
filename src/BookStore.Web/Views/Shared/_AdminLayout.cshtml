@@ -1,0 +1,339 @@
+@{
+    var currentPath = Context.Request.Path.Value ?? "/admin";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    if (string.IsNullOrWhiteSpace(returnUrl) || !Url.IsLocalUrl(returnUrl))
+    {
+        returnUrl = "/admin";
+    }
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var currentUserId = isAuthenticated
+        ? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? ""
+        : "";
+
+    var isOverview = string.Equals(currentPath, "/admin", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(currentPath, "/admin/", StringComparison.OrdinalIgnoreCase);
+    var isBooks = currentPath.StartsWith("/admin/sach", StringComparison.OrdinalIgnoreCase);
+    var isCategories = currentPath.StartsWith("/admin/the-loai", StringComparison.OrdinalIgnoreCase);
+    var isThreshold = currentPath.StartsWith("/admin/kho/nguong", StringComparison.OrdinalIgnoreCase);
+    var isInventory = currentPath.StartsWith("/admin/kho", StringComparison.OrdinalIgnoreCase) && !isThreshold;
+    var isOrders = currentPath.StartsWith("/admin/don-hang", StringComparison.OrdinalIgnoreCase);
+    var isReviews = currentPath.StartsWith("/admin/danh-gia", StringComparison.OrdinalIgnoreCase);
+    var isCustomers = currentPath.StartsWith("/admin/khach-hang", StringComparison.OrdinalIgnoreCase);
+    var isReports = currentPath.StartsWith("/admin/bao-cao", StringComparison.OrdinalIgnoreCase);
+
+    var pageTitle = ViewData["Title"] as string;
+    var displayTitle = !string.IsNullOrWhiteSpace(pageTitle)
+        ? pageTitle
+        : ViewText.T("Quản trị hệ thống", "Administration");
+
+    var isErrorView = ViewData.Model is ErrorViewModel;
+    var successMessage = isErrorView ? null : TempData["Success"] as string;
+    var errorMessage = isErrorView ? null : TempData["Error"] as string;
+}
+<!DOCTYPE html>
+<html lang="@ViewText.CurrentCultureCode">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@displayTitle - @ViewText.T("Quản trị BookStore", "BookStore Admin")</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/lib/bootstrap/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/commerce.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/admin.css" asp-append-version="true" />
+</head>
+<body class="bs-admin-body"
+      data-authenticated="@(isAuthenticated ? "true" : "false")"
+      data-user-id="@currentUserId">
+    <a href="#admin-main-content" class="bs-skip-link">
+        @ViewText.T("Chuyển đến nội dung chính", "Skip to main content")
+    </a>
+
+    @if (isAuthenticated)
+    {
+        <div id="bs-csrf-token" class="d-none">@Html.AntiForgeryToken()</div>
+    }
+
+    <div class="bs-admin-shell">
+        <aside class="bs-admin-sidebar bs-admin-sidebar-desktop d-none d-lg-flex" aria-label="@ViewText.T("Điều hướng quản trị", "Admin navigation")">
+            <a href="/admin" class="bs-admin-sidebar-brand">
+                <span class="d-inline-flex align-items-center gap-2">
+                    <span class="bs-brand-mark" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                    </span>
+                    <span class="fw-bold">BookStore</span>
+                </span>
+                <span class="bs-admin-brand-badge">@ViewText.T("Quản trị", "Admin")</span>
+            </a>
+
+            <nav class="bs-admin-sidebar-nav">
+                <div class="bs-admin-nav-group">
+                    <div class="bs-admin-nav-label">@ViewText.T("Tổng quan", "Overview")</div>
+                    <ul class="bs-admin-nav-list">
+                        <li>
+                            <a href="/admin" class="bs-admin-nav-link @(isOverview ? "active" : "")" aria-current="@(isOverview ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect width="7" height="9" x="3" y="3" rx="1" />
+                                    <rect width="7" height="5" x="14" y="3" rx="1" />
+                                    <rect width="7" height="9" x="14" y="12" rx="1" />
+                                    <rect width="7" height="5" x="3" y="16" rx="1" />
+                                </svg>
+                                <span>@ViewText.T("Bảng điều khiển", "Dashboard")</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bs-admin-nav-group">
+                    <div class="bs-admin-nav-label">@ViewText.T("Danh mục", "Catalog")</div>
+                    <ul class="bs-admin-nav-list">
+                        <li>
+                            <a href="/admin/sach" class="bs-admin-nav-link @(isBooks ? "active" : "")" aria-current="@(isBooks ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                                </svg>
+                                <span>@ViewText.T("Sách", "Books")</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/the-loai" class="bs-admin-nav-link @(isCategories ? "active" : "")" aria-current="@(isCategories ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+                                    <path d="M7 7h.01" />
+                                </svg>
+                                <span>@ViewText.T("Thể loại", "Categories")</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bs-admin-nav-group">
+                    <div class="bs-admin-nav-label">@ViewText.T("Kho hàng", "Inventory")</div>
+                    <ul class="bs-admin-nav-list">
+                        <li>
+                            <a href="/admin/kho" class="bs-admin-nav-link @(isInventory ? "active" : "")" aria-current="@(isInventory ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m7.5 4.27 9 5.15" />
+                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                                    <path d="m3.3 7 8.7 5 8.7-5" />
+                                    <path d="M12 22V12" />
+                                </svg>
+                                <span>@ViewText.T("Tồn kho", "Stock Levels")</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/kho/nguong" class="bs-admin-nav-link @(isThreshold ? "active" : "")" aria-current="@(isThreshold ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                    <path d="M12 9v4" />
+                                    <path d="M12 17h.01" />
+                                </svg>
+                                <span>@ViewText.T("Ngưỡng tồn thấp", "Low-Stock Threshold")</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bs-admin-nav-group">
+                    <div class="bs-admin-nav-label">@ViewText.T("Bán hàng", "Sales")</div>
+                    <ul class="bs-admin-nav-list">
+                        <li>
+                            <a href="/admin/don-hang" class="bs-admin-nav-link @(isOrders ? "active" : "")" aria-current="@(isOrders ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" x2="8" y1="13" y2="13" />
+                                    <line x1="16" x2="8" y1="17" y2="17" />
+                                </svg>
+                                <span>@ViewText.T("Đơn hàng", "Orders")</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/danh-gia" class="bs-admin-nav-link @(isReviews ? "active" : "")" aria-current="@(isReviews ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <span>@ViewText.T("Đánh giá", "Reviews")</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/admin/khach-hang" class="bs-admin-nav-link @(isCustomers ? "active" : "")" aria-current="@(isCustomers ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                <span>@ViewText.T("Khách hàng", "Customers")</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bs-admin-nav-group mb-0">
+                    <div class="bs-admin-nav-label">@ViewText.T("Báo cáo", "Analytics")</div>
+                    <ul class="bs-admin-nav-list">
+                        <li>
+                            <a href="/admin/bao-cao" class="bs-admin-nav-link @(isReports ? "active" : "")" aria-current="@(isReports ? "page" : null)">
+                                <svg class="bs-admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <line x1="18" x2="18" y1="20" y2="10" />
+                                    <line x1="12" x2="12" y1="20" y2="4" />
+                                    <line x1="6" x2="6" y1="20" y2="14" />
+                                </svg>
+                                <span>@ViewText.T("Báo cáo doanh thu", "Revenue Reports")</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="bs-admin-sidebar-footer">
+                <a href="/" class="bs-admin-storefront-link">
+                    <span>@ViewText.T("Xem cửa hàng", "View Storefront")</span>
+                    <span aria-hidden="true">&rarr;</span>
+                </a>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="small text-truncate" title="@User.Identity?.Name">
+                        <span class="text-secondary d-block" style="font-size: 0.7rem;">@ViewText.T("Quản trị viên", "Administrator")</span>
+                        <strong class="text-white">@User.Identity?.Name</strong>
+                    </div>
+                    <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true">
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.75rem;">
+                            @ViewText.T("Đăng xuất", "Sign out")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+
+        <div class="offcanvas offcanvas-start bg-dark text-white d-lg-none" tabindex="-1" id="adminSidebarOffcanvas" aria-labelledby="adminSidebarOffcanvasLabel" style="width: 260px;">
+            <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+                <h2 class="h6 fw-bold mb-0 text-white" id="adminSidebarOffcanvasLabel">
+                    BookStore &middot; @ViewText.T("Quản trị", "Admin")
+                </h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="@ViewText.T("Đóng", "Close")"></button>
+            </div>
+            <div class="offcanvas-body p-0 d-flex flex-column justify-content-between">
+                <nav class="bs-admin-sidebar-nav">
+                    <div class="bs-admin-nav-group">
+                        <div class="bs-admin-nav-label">@ViewText.T("Tổng quan", "Overview")</div>
+                        <ul class="bs-admin-nav-list">
+                            <li><a href="/admin" class="bs-admin-nav-link @(isOverview ? "active" : "")">@ViewText.T("Bảng điều khiển", "Dashboard")</a></li>
+                        </ul>
+                    </div>
+                    <div class="bs-admin-nav-group">
+                        <div class="bs-admin-nav-label">@ViewText.T("Danh mục", "Catalog")</div>
+                        <ul class="bs-admin-nav-list">
+                            <li><a href="/admin/sach" class="bs-admin-nav-link @(isBooks ? "active" : "")">@ViewText.T("Sách", "Books")</a></li>
+                            <li><a href="/admin/the-loai" class="bs-admin-nav-link @(isCategories ? "active" : "")">@ViewText.T("Thể loại", "Categories")</a></li>
+                        </ul>
+                    </div>
+                    <div class="bs-admin-nav-group">
+                        <div class="bs-admin-nav-label">@ViewText.T("Kho hàng", "Inventory")</div>
+                        <ul class="bs-admin-nav-list">
+                            <li><a href="/admin/kho" class="bs-admin-nav-link @(isInventory ? "active" : "")">@ViewText.T("Tồn kho", "Stock Levels")</a></li>
+                            <li><a href="/admin/kho/nguong" class="bs-admin-nav-link @(isThreshold ? "active" : "")">@ViewText.T("Ngưỡng tồn thấp", "Low-Stock Threshold")</a></li>
+                        </ul>
+                    </div>
+                    <div class="bs-admin-nav-group">
+                        <div class="bs-admin-nav-label">@ViewText.T("Bán hàng", "Sales")</div>
+                        <ul class="bs-admin-nav-list">
+                            <li><a href="/admin/don-hang" class="bs-admin-nav-link @(isOrders ? "active" : "")">@ViewText.T("Đơn hàng", "Orders")</a></li>
+                            <li><a href="/admin/danh-gia" class="bs-admin-nav-link @(isReviews ? "active" : "")">@ViewText.T("Đánh giá", "Reviews")</a></li>
+                            <li><a href="/admin/khach-hang" class="bs-admin-nav-link @(isCustomers ? "active" : "")">@ViewText.T("Khách hàng", "Customers")</a></li>
+                        </ul>
+                    </div>
+                    <div class="bs-admin-nav-group mb-0">
+                        <div class="bs-admin-nav-label">@ViewText.T("Báo cáo", "Analytics")</div>
+                        <ul class="bs-admin-nav-list">
+                            <li><a href="/admin/bao-cao" class="bs-admin-nav-link @(isReports ? "active" : "")">@ViewText.T("Báo cáo doanh thu", "Revenue Reports")</a></li>
+                        </ul>
+                    </div>
+                </nav>
+                <div class="bs-admin-sidebar-footer">
+                    <a href="/" class="bs-admin-storefront-link">
+                        <span>@ViewText.T("Xem cửa hàng", "View Storefront")</span>
+                        <span aria-hidden="true">&rarr;</span>
+                    </a>
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <strong class="small text-white text-truncate">@User.Identity?.Name</strong>
+                        <form method="post" action="/tai-khoan/dang-xuat" asp-antiforgery="true">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" style="font-size: 0.75rem;">
+                                @ViewText.T("Đăng xuất", "Sign out")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bs-admin-main-wrap">
+            <header class="bs-admin-topbar">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <button class="btn btn-sm btn-outline-secondary d-lg-none"
+                            type="button"
+                            data-bs-toggle="offcanvas"
+                            data-bs-target="#adminSidebarOffcanvas"
+                            aria-controls="adminSidebarOffcanvas"
+                            aria-label="@ViewText.T("Mở menu quản trị", "Open admin menu")">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="4" x2="20" y1="12" y2="12" />
+                            <line x1="4" x2="20" y1="6" y2="6" />
+                            <line x1="4" x2="20" y1="18" y2="18" />
+                        </svg>
+                    </button>
+                    <h1 class="bs-admin-topbar-title text-truncate">@displayTitle</h1>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    @await RenderSectionAsync("PageActions", required: false)
+
+                    <form method="post" action="/ngon-ngu" asp-antiforgery="true" class="bs-lang-switch">
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit"
+                                name="culture"
+                                value="vi"
+                                class="bs-lang-btn @(!ViewText.IsEnglish ? "active" : "")"
+                                aria-label="Tiếng Việt">VI</button>
+                        <button type="submit"
+                                name="culture"
+                                value="en"
+                                class="bs-lang-btn @(ViewText.IsEnglish ? "active" : "")"
+                                aria-label="English">EN</button>
+                    </form>
+                </div>
+            </header>
+
+            <main id="admin-main-content" class="bs-admin-content">
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-4" role="status">
+                        @successMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                        <strong>@ViewText.T("Không thể thực hiện:", "Action failed:")</strong> @errorMessage
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ViewText.T("Đóng", "Close")"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="/lib/jquery/jquery.min.js" asp-append-version="true"></script>
+    <script src="/lib/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    <script src="/js/commerce.js" asp-append-version="true"></script>
+    <script src="/js/admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
