@@ -109,6 +109,8 @@ form[data-cart-add-form="true"] > .d-flex > .bs-qty-input {
     background-color: var(--bs-surface);
     border: 1px solid var(--bs-border);
     border-radius: var(--radius-card);
+    height: 100%;
+    padding: 1rem;
 }
 
 @media (min-width: 992px) {
@@ -234,6 +236,9 @@ form[data-cart-add-form="true"] > .d-flex > .bs-qty-input {
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-sm);
     padding: 2rem;
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
 }
 
 .bs-order-seal-img {

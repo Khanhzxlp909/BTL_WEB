@@ -40,7 +40,7 @@
                 {
                     <div class="bs-detail-cover-placeholder">
                         <span class="bs-book-cover-category">@book.CategoryName</span>
-                        <strong class="bs-serif-heading fs-4">@book.Title</strong>
+                            <strong class="bs-detail-cover-title fs-4">@book.Title</strong>
                         <div>
                             <div class="small text-secondary">@book.Author</div>
                             <div class="small text-muted mt-1">SKU: <code>@book.SKU</code></div>
@@ -72,7 +72,7 @@
                     }
                 </div>
 
-                <h1 class="h3 bs-serif-heading fw-bold mb-1">@book.Title</h1>
+                <h1 class="h3 bs-detail-title fw-bold mb-1">@book.Title</h1>
                 <p class="text-secondary mb-3">
                     @ViewText.T("Tác giả:", "Author:") <strong class="text-dark">@book.Author</strong>
                 </p>

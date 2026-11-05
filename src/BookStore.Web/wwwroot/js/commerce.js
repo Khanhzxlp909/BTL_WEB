@@ -987,7 +987,7 @@
     }
 
     function initCustomerFormsAndFilters() {
-        var hasAdminJs = Boolean(document.querySelector('script[src="/js/admin.js"]'));
+        var hasAdminJs = document.body.classList.contains("bs-admin-body");
 
         var customerFilterForms = document.querySelectorAll('form[data-customer-filter-form="true"]');
         customerFilterForms.forEach(function (form) {

@@ -158,7 +158,13 @@ public sealed class CommerceTests
     {
         using var factory = new BookStoreFactory(); await factory.SeedAsync(); using var client = factory.Browser(); await Authenticate(client);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/gio-hang")).StatusCode);
+        var siteStyles = await client.GetStringAsync("/css/site.css");
+        Assert.DoesNotMatch(@"\.card\s*\{\s*height\s*:\s*100%\s*;", siteStyles);
         await client.PostAsJsonAsync("/api/cart/items", new { bookId = 1, quantity = 1 });
+        var checkout = await client.GetStringAsync("/dat-hang");
+        Assert.DoesNotContain("novalidate", checkout);
+        Assert.Contains("name=\"Input.ConfirmQuote\"", checkout);
+        Assert.Contains("required", checkout);
         var input = await Quote(client);
         using (var scope = factory.Services.CreateScope())
         {

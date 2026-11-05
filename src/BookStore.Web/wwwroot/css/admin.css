@@ -242,6 +242,8 @@ body.bs-admin-body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    height: 100%;
+    min-height: 132px;
 }
 
 .bs-metric-icon {
@@ -292,6 +294,9 @@ body.bs-admin-body {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--bs-border);
+    border-radius: var(--radius-card);
+    background-color: var(--bs-surface);
 }
 
 .bs-admin-table {
@@ -313,7 +318,7 @@ body.bs-admin-body {
 
 .bs-admin-table > tbody > tr > td {
     padding: 0.75rem 1rem;
-    min-height: 52px;
+    height: 52px;
     border-bottom: 1px solid var(--bs-border);
     color: var(--bs-text-main);
     font-size: 0.875rem;
