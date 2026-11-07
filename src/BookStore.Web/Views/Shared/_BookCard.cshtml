@@ -92,7 +92,7 @@
                           data-cart-add-form="true"
                           data-book-id="@Model.Id"
                           novalidate>
-                        <div class="d-flex align-items-center gap-1">
+                        <div class="bs-card-cart-row">
                             <div class="bs-qty-stepper flex-shrink-0">
                                 <button type="button"
                                         class="btn btn-sm"
@@ -114,7 +114,7 @@
                                         aria-label="@ViewText.T("Tăng", "Increase")">+</button>
                             </div>
                             <button type="submit"
-                                    class="btn btn-sm bs-btn-primary flex-grow-1 text-nowrap px-2"
+                                    class="btn btn-sm bs-btn-primary bs-card-add-btn text-nowrap px-2"
                                     data-book-id="@Model.Id">
                                 @ViewText.T("Thêm giỏ", "Add")
                             </button>

@@ -42,7 +42,26 @@ public sealed class CartService(BookStoreDbContext db, DatabaseReadiness readine
         var cart = await db.Carts.Include(x => x.Items).SingleOrDefaultAsync(x => x.UserId == userId, ct);
         if (cart is null) { cart = new Cart { UserId = userId }; db.Carts.Add(cart); }
         var item = cart.Items.SingleOrDefault(x => x.BookId == input.BookId);
-        var total = (long)(item?.Quantity ?? 0) + input.Quantity;
+        var inCart = item?.Quantity ?? 0;
+        var total = (long)inCart + input.Quantity;
+        var available = book.Inventory.Quantity - book.Inventory.ReservedQuantity;
+        // Thêm cộng dồn vào dòng có sẵn: báo rõ giỏ đã có bao nhiêu và còn thêm được tối đa bao nhiêu.
+        if (inCart > 0 && total > available && !book.IsDeleted && !book.Category.IsDeleted)
+        {
+            var canAdd = available - inCart;
+            throw AdminErrors.Field("CART_STOCK_INSUFFICIENT", "Quantity", canAdd > 0
+                ? ValidationText.Pick(
+                    $"Giỏ đã có {inCart} cuốn '{book.Title}'; chỉ còn thêm được tối đa {canAdd} cuốn (khả dụng {available}). Giảm số lượng thêm hoặc chỉnh trong giỏ hàng.",
+                    $"Your cart already has {inCart} of '{book.Title}'; you can add at most {canAdd} more ({available} available). Reduce the quantity or edit your cart.")
+                : canAdd == 0
+                    ? ValidationText.Pick(
+                        $"Giỏ đã có {inCart} cuốn '{book.Title}', bằng toàn bộ số khả dụng ({available}). Không thể thêm nữa; xem lại trong giỏ hàng.",
+                        $"Your cart already has {inCart} of '{book.Title}', all {available} available copies. You cannot add more; review your cart.")
+                    // Tồn kho giảm sau khi khách đã thêm vào giỏ: số trong giỏ vượt số khả dụng hiện tại.
+                    : ValidationText.Pick(
+                        $"Giỏ đang có {inCart} cuốn '{book.Title}', vượt số khả dụng hiện tại ({available}). Vào giỏ hàng giảm xuống tối đa {available} cuốn.",
+                        $"Your cart has {inCart} of '{book.Title}', more than the {available} now available. Reduce it to at most {available} in your cart."), 409);
+        }
         ValidateQuantity(book, total);
         if (item is null) cart.Items.Add(new CartItem { BookId = input.BookId, Quantity = (int)total });
         else item.Quantity = (int)total;

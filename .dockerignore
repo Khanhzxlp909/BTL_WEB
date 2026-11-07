@@ -12,3 +12,5 @@ src/BookStore.Web/wwwroot/uploads
 UML
 *.doc
 *.docx
+
+tools/

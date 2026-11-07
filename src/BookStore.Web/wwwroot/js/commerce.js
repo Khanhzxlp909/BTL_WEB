@@ -648,11 +648,18 @@
 
             $feedback.empty().removeClass("d-none");
 
-            if (!Number.isInteger(bookId) || bookId < 1 || !Number.isInteger(quantity) || quantity < 1) {
+            var maxQty = parseInt($qtyInput.attr("max"), 10);
+            if (!Number.isInteger(bookId) || bookId < 1 || !Number.isInteger(quantity) || quantity < 1
+                || (Number.isInteger(maxQty) && maxQty > 0 && quantity > maxQty)) {
+                var over = Number.isInteger(quantity) && Number.isInteger(maxQty) && maxQty > 0 && quantity > maxQty;
+                // Trả ô số lượng về giá trị hợp lệ để không giữ lại 0, số âm, số lẻ hoặc số vượt tồn.
+                $qtyInput.val(String(over ? maxQty : 1));
                 $feedback.append(
                     $("<div>")
                         .addClass("alert alert-danger py-1 px-2 small mb-0 mt-2")
-                        .text(t("Số lượng thêm vào giỏ phải là số nguyên từ 1 trở lên.", "Quantity must be a whole number of at least 1."))
+                        .text(over
+                            ? t("Chỉ còn " + maxQty + " cuốn khả dụng; đã đặt lại số lượng về " + maxQty + ".", "Only " + maxQty + " copies are available; quantity reset to " + maxQty + ".")
+                            : t("Số lượng thêm vào giỏ phải là số nguyên từ 1 trở lên; đã đặt lại về 1.", "Quantity must be a whole number of at least 1; reset to 1."))
                 );
                 return;
             }
@@ -686,6 +693,8 @@
                         .text(t("Xem giỏ hàng", "View cart"))
                 );
                 $feedback.empty().append($ok);
+                // Thêm xong đưa ô về 1 để lần bấm sau không vô tình thêm lại số lượng lớn.
+                $qtyInput.val("1");
             }).fail(function (jqXHR) {
                 var $err = buildErrorDom(jqXHR, true);
                 $err.addClass("mt-2 py-2 px-2");
@@ -987,7 +996,6 @@
     }
 
     function initCustomerFormsAndFilters() {
-        var hasAdminJs = Boolean(document.querySelector('script[src="/js/admin.js"]'));
 
         var customerFilterForms = document.querySelectorAll('form[data-customer-filter-form="true"]');
         customerFilterForms.forEach(function (form) {
@@ -1005,29 +1013,57 @@
             });
         });
 
-        if (!hasAdminJs) {
-            var guardedForms = document.querySelectorAll("form[data-confirm], form[data-prevent-double-submit]");
-            guardedForms.forEach(function (form) {
-                form.addEventListener("submit", function (event) {
-                    if (form.dataset.submitting === "true") {
-                        event.preventDefault();
-                        return;
-                    }
-                    var msg = form.getAttribute("data-confirm");
-                    if (msg && !window.confirm(msg)) {
-                        event.preventDefault();
-                        return;
-                    }
-                    if (form.getAttribute("data-prevent-double-submit") === "true") {
-                        form.dataset.submitting = "true";
+        bindGuardedForms();
+    }
+
+    // Xác nhận + chống gửi lặp dùng chung cho layout khách và quản trị. Mỗi form chỉ gắn một lần
+    // (cờ data-guard-bound), tránh hai bộ lắng nghe chặn nhau khiến form không gửi được.
+    function bindGuardedForms() {
+        document.querySelectorAll("form[data-confirm], form[data-prevent-double-submit]").forEach(function (form) {
+            if (form.dataset.guardBound === "true") {
+                return;
+            }
+            form.dataset.guardBound = "true";
+            form.addEventListener("submit", function (event) {
+                if (form.dataset.submitting === "true") {
+                    event.preventDefault();
+                    return;
+                }
+                var msg = form.getAttribute("data-confirm");
+                if (msg && !window.confirm(msg)) {
+                    event.preventDefault();
+                    return;
+                }
+                if (form.getAttribute("data-prevent-double-submit") === "true") {
+                    // Chặn bấm lặp ngay lập tức; chỉ khóa nút khi trình duyệt thực sự gửi form. Nếu một listener
+                    // khác (chạy sau) đã chặn gửi, mở cờ lại để form không bị khóa vĩnh viễn.
+                    form.dataset.submitting = "true";
+                    window.setTimeout(function () {
+                        if (event.defaultPrevented) {
+                            delete form.dataset.submitting;
+                            return;
+                        }
                         form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (btn) {
                             btn.disabled = true;
                         });
-                    }
-                });
+                    }, 0);
+                }
             });
-        }
+        });
     }
+
+    // Trang được khôi phục từ bfcache (nút Back) giữ trạng thái "đang gửi": mở khóa lại để gửi được.
+    window.addEventListener("pageshow", function (event) {
+        if (!event.persisted) {
+            return;
+        }
+        document.querySelectorAll('form[data-submitting="true"]').forEach(function (form) {
+            delete form.dataset.submitting;
+            form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (btn) {
+                btn.disabled = false;
+            });
+        });
+    });
 
     $(function () {
         initHeaderCartSync();

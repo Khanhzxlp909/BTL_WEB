@@ -72,7 +72,8 @@ public sealed class AccountController(UserManager<ApplicationUser> users, SignIn
                 "Sign-in failed: the credentials are incorrect or the account is locked. Check your username and password; try later after repeated failures, or contact an administrator."));
             return InvalidForm(model, 401);
         }
-        if (Url.IsLocalUrl(model.ReturnUrl)) return LocalRedirect(model.ReturnUrl!);
+        var target = SafeRedirect.LocalOrDefault(Url, model.ReturnUrl, fallback: "");
+        if (target.Length > 0) return LocalRedirect(target);
         var user = await users.FindByNameAsync(model.UserName);
         return await users.IsInRoleAsync(user!, RoleNames.Admin) ? Redirect("/admin") : Redirect("/");
     }

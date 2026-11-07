@@ -9,7 +9,7 @@ public interface ICoverImageStorage
     Task DeleteAsync(string path, CancellationToken ct);
 }
 
-public sealed class CoverImageStorage(IWebHostEnvironment environment) : ICoverImageStorage
+public sealed class CoverImageStorage(IWebHostEnvironment environment, ILogger<CoverImageStorage>? logger = null) : ICoverImageStorage
 {
     public const long MaxBytes = 5 * 1024 * 1024;
     private readonly string root = Path.Combine(environment.WebRootPath ?? Path.Combine(environment.ContentRootPath, "wwwroot"), "uploads", "covers");
@@ -52,20 +52,29 @@ public sealed class CoverImageStorage(IWebHostEnvironment environment) : ICoverI
         using var image = SKImage.FromBitmap(bitmap);
         using var encoded = image.Encode(SKEncodedImageFormat.Webp, 85);
         if (encoded is null) throw new InvalidOperationException("Không thể chuyển ảnh bìa sang WEBP. Kiểm tra thư viện xử lý ảnh theo mã tra cứu.");
-        Directory.CreateDirectory(root);
         var name = $"{Guid.NewGuid():N}.webp";
         var destination = Path.Combine(root, name);
         try
         {
+            Directory.CreateDirectory(root);
             // Decode và encode lại, loại metadata/nội dung đính kèm; không tin tên/đường dẫn client.
             await File.WriteAllBytesAsync(destination, encoded.ToArray(), ct);
             return $"/uploads/covers/{name}";
         }
-        catch (Exception failure)
+        catch (Exception failure) when (failure is IOException or UnauthorizedAccessException)
         {
-            try { File.Delete(destination); }
-            catch (Exception cleanup) { throw new AggregateException("Ghi ảnh bìa thất bại và không thể dọn tệp mới. Kiểm tra kho ảnh theo mã tra cứu.", failure, cleanup); }
-            throw;
+            if (File.Exists(destination))
+            {
+                try { File.Delete(destination); }
+                catch (Exception cleanup) { throw new AggregateException("Ghi ảnh bìa thất bại và không thể dọn tệp mới. Kiểm tra kho ảnh theo mã tra cứu.", failure, cleanup); }
+            }
+            // Lỗi lưu trữ phía máy chủ (thư mục chỉ đọc, hết dung lượng, thiếu quyền): ghi log đầy đủ để tra cứu,
+            // client chỉ nhận mô tả bước thất bại; sách chưa được lưu.
+            logger?.LogError(failure, "COVER_STORAGE_UNAVAILABLE: không ghi được ảnh bìa vào {Root}.", root);
+            throw new AppException(503, "COVER_STORAGE_UNAVAILABLE", ValidationText.Pick(
+                "Không thể lưu ảnh bìa vì thư mục lưu ảnh trên máy chủ không ghi được (chỉ đọc, thiếu quyền hoặc hết dung lượng). Sách chưa được lưu. Lưu lại không kèm ảnh, hoặc báo quản trị hệ thống kiểm tra thư mục wwwroot/uploads/covers.",
+                "The cover could not be stored because the server upload folder is not writable (read-only, no permission or out of space). The book was not saved. Save without a cover, or ask the system administrator to check wwwroot/uploads/covers."),
+                new Dictionary<string, string[]> { ["CoverFile"] = [ValidationText.Pick("Thư mục lưu ảnh bìa trên máy chủ không ghi được.", "The server cover folder is not writable.")] });
         }
     }
 

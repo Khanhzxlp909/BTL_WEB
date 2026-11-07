@@ -61,7 +61,7 @@ public sealed class AdminBooksController(IAdminCatalogService catalog) : Control
                 TempData["Success"] = ValidationText.Pick("Đã lưu thông tin sách. Tồn kho chỉ thay đổi qua chức năng kho và đơn hàng.", "Book details saved. Stock changes only through inventory and order operations.");
                 return RedirectToAction(nameof(Index));
             }
-            catch (AppException ex) when (ex.StatusCode is 400 or 409 or 422) { AdminErrors.Apply(this, ex); }
+            catch (AppException ex) when (ex.StatusCode is 400 or 409 or 422 || ex.Error.Code == "COVER_STORAGE_UNAVAILABLE") { AdminErrors.Apply(this, ex); }
         else Response.StatusCode = 400;
         var current = await catalog.BookFormAsync(id, ct);
         model.Categories = current.Categories;

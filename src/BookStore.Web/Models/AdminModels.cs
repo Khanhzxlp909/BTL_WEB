@@ -12,12 +12,33 @@ public sealed class FieldRequiredAttribute : ValidationAttribute
 public sealed class TextLimitAttribute(int length) : ValidationAttribute
 {
     public override bool IsValid(object? value) => value is null || value is string text && text.Length <= length;
-    public override string FormatErrorMessage(string name) => ValidationText.Pick($"{name} tối đa {length} ký tự. Hãy rút ngắn dữ liệu.", $"{name} allows at most {length} characters. Shorten the value.");
+    public override string FormatErrorMessage(string name) => ValidationText.Pick($"{FieldLabels.Of(name)} tối đa {length} ký tự. Hãy rút ngắn dữ liệu.", $"{FieldLabels.Of(name)} allows at most {length} characters. Shorten the value.");
 }
 public sealed class PositiveIntegerAttribute : ValidationAttribute
 {
     public override bool IsValid(object? value) => value is int number && number > 0;
-    public override string FormatErrorMessage(string name) => ValidationText.Pick($"{name} phải là số nguyên dương. Hãy nhập từ 1 trở lên.", $"{name} must be a positive integer. Enter at least 1.");
+    public override string FormatErrorMessage(string name) => name == "CategoryId"
+        ? ValidationText.Pick("Hãy chọn thể loại sách từ danh sách.", "Select a book category from the list.")
+        : ValidationText.Pick($"{FieldLabels.Of(name)} phải là số nguyên dương. Hãy nhập từ 1 trở lên.", $"{FieldLabels.Of(name)} must be a positive integer. Enter at least 1.");
+}
+
+// Tên trường hiển thị cho người dùng trong thông báo lỗi, thay cho tên thuộc tính kỹ thuật.
+public static class FieldLabels
+{
+    private static readonly Dictionary<string, (string Vi, string En)> Labels = new()
+    {
+        ["Title"] = ("Tên sách", "Title"), ["Author"] = ("Tác giả", "Author"), ["Publisher"] = ("Nhà xuất bản", "Publisher"),
+        ["ISBN"] = ("ISBN", "ISBN"), ["SKU"] = ("Mã SKU", "SKU"), ["CategoryId"] = ("Thể loại", "Category"),
+        ["Name"] = ("Tên thể loại", "Category name"), ["Description"] = ("Mô tả", "Description"),
+        ["Quantity"] = ("Số lượng", "Quantity"), ["BookId"] = ("Mã sách", "Book ID"), ["Reference"] = ("Mã phiếu nhập", "Reference"),
+        ["Reason"] = ("Lý do", "Reason"), ["RowVersion"] = ("Phiên bản tồn kho", "Inventory version"),
+        ["RecipientName"] = ("Tên người nhận", "Recipient name"), ["Phone"] = ("Số điện thoại", "Phone"),
+        ["ShippingAddress"] = ("Địa chỉ giao hàng", "Shipping address"), ["Note"] = ("Ghi chú", "Note"),
+        ["Comment"] = ("Nội dung đánh giá", "Review comment"), ["Search"] = ("Từ khóa", "Keyword"),
+        ["Customer"] = ("Khách hàng", "Customer"), ["Page"] = ("Trang", "Page"), ["PageSize"] = ("Số mục mỗi trang", "Page size")
+    };
+
+    public static string Of(string name) => Labels.TryGetValue(name, out var label) ? ValidationText.Pick(label.Vi, label.En) : name;
 }
 
 public class BookInput : IValidatableObject

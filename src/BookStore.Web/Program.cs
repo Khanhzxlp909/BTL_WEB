@@ -81,6 +81,10 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 builder.Services.AddControllersWithViews(options =>
 {
+    // Bắt buộc nhập đã khai báo tường minh bằng [FieldRequired] (thông báo VI/EN); tắt [Required] ngầm
+    // của chuỗi non-nullable để không sinh thông báo tiếng Anh mặc định "The X field is required".
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    options.ModelMetadataDetailsProviders.Add(new LocalizedRequiredMetadata());
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
     options.Filters.Add<AntiforgeryErrorFilter>();
     options.Filters.Add<ValidationErrorFilter>();

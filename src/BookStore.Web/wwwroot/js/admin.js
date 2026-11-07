@@ -29,29 +29,7 @@
             });
         });
 
-        var confirmForms = document.querySelectorAll("form[data-confirm], form[data-prevent-double-submit]");
-        confirmForms.forEach(function (form) {
-            form.addEventListener("submit", function (event) {
-                if (form.dataset.submitting === "true") {
-                    event.preventDefault();
-                    return;
-                }
-
-                var message = form.getAttribute("data-confirm");
-                if (message && !window.confirm(message)) {
-                    event.preventDefault();
-                    return;
-                }
-
-                if (form.getAttribute("data-prevent-double-submit") === "true") {
-                    form.dataset.submitting = "true";
-                    var submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                    submitButtons.forEach(function (btn) {
-                        btn.disabled = true;
-                    });
-                }
-            });
-        });
+        // Xác nhận + chống gửi lặp do commerce.js (bindGuardedForms) xử lý chung cho mọi layout.
 
         var coverInput = document.querySelector('input[type="file"][name="CoverFile"]');
         var coverStatus = document.getElementById("bs-cover-file-selected");
