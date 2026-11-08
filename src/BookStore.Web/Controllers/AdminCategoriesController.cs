@@ -27,8 +27,15 @@ public sealed class AdminCategoriesController(IAdminCatalogService catalog) : Co
     [HttpPost("{id:int}/xoa")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await catalog.DeleteCategoryAsync(id, ct);
-        TempData["Success"] = ValidationText.Pick("Đã xóa mềm thể loại không có sách tham chiếu.", "The unreferenced category has been soft-deleted.");
+        try
+        {
+            await catalog.DeleteCategoryAsync(id, ct);
+            TempData["Success"] = ValidationText.Pick("Đã xóa mềm thể loại không có sách tham chiếu.", "The unreferenced category has been soft-deleted.");
+        }
+        catch (AppException ex) when (ex.StatusCode == 409)
+        {
+            TempData["Error"] = $"{ex.Message} ({ex.Error.Code})";
+        }
         return RedirectToAction(nameof(Index));
     }
     private async Task<IActionResult> Save(int? id, CategoryInput input, CancellationToken ct)

@@ -106,14 +106,18 @@ public sealed class AdminTests
         using var client = factory.Browser();
         await BookStoreFactory.LoginAsync(client, "manager");
         var referenced = await Post(client, "/admin/the-loai/1/xoa", new(), "/admin/the-loai");
-        Assert.Equal(HttpStatusCode.Conflict, referenced.StatusCode);
-        Assert.Contains("CATEGORY_HAS_BOOKS", await referenced.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.Redirect, referenced.StatusCode);
+        var categoryResponse = await client.GetAsync(referenced.Headers.Location);
+        Assert.Equal(HttpStatusCode.OK, categoryResponse.StatusCode);
+        var categoryList = await categoryResponse.Content.ReadAsStringAsync();
+        Assert.Contains("CATEGORY_HAS_BOOKS", categoryList);
         Assert.Equal(HttpStatusCode.Redirect, (await Post(client, "/admin/the-loai/them", new() { ["Input.Name"] = "Văn học" })).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await Post(client, "/admin/the-loai/them", new() { ["Input.Name"] = "văn học" })).StatusCode);
         Assert.Equal(HttpStatusCode.Redirect, (await Post(client, "/admin/the-loai/2/xoa", new(), "/admin/the-loai")).StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, (await Post(client, "/admin/the-loai/them", new() { ["Input.Name"] = "Văn học" })).StatusCode);
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BookStoreDbContext>();
+        Assert.False((await db.Categories.FindAsync(1))!.IsDeleted);
         Assert.True((await db.Categories.FindAsync(2))!.IsDeleted);
         Assert.Equal(2, await db.Categories.CountAsync());
     }

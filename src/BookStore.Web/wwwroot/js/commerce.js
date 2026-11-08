@@ -822,7 +822,7 @@
             });
         }
 
-        function updateLineQuantity(lineId, newQuantity) {
+        function updateLineQuantity(lineId, newQuantity, successMessage) {
             var $inp = findLineQtyInput(lineId);
             if (busy) {
                 rollbackQtyInput($inp);
@@ -852,9 +852,9 @@
                     $inp.attr("value", String(newQuantity)).val(String(newQuantity));
                 }
                 setBusy(false);
-                var msg = newQuantity === 0
+                var msg = successMessage || (newQuantity === 0
                     ? t("Đã xóa đầu sách khỏi giỏ hàng.", "Removed item from cart.")
-                    : t("Đã cập nhật số lượng giỏ hàng.", "Updated cart quantity.");
+                    : t("Đã cập nhật số lượng giỏ hàng.", "Updated cart quantity."));
                 applyCartResponse(cart, msg);
             }).fail(function (jqXHR) {
                 rollbackQtyInput($inp);
@@ -898,7 +898,17 @@
                 showInvalidQuantityAlert();
                 return;
             }
-            updateLineQuantity(lineId, parsed);
+            var max = parseInt($inp.attr("max"), 10);
+            var successMessage = null;
+            if (Number.isInteger(max) && max > 0 && parsed > max) {
+                parsed = max;
+                $inp.val(String(max));
+                successMessage = t(
+                    "Số lượng đã được điều chỉnh về mức tồn kho khả dụng tối đa (" + max + ").",
+                    "Quantity was adjusted to the maximum available stock (" + max + ")."
+                );
+            }
+            updateLineQuantity(lineId, parsed, successMessage);
         });
 
         $root.on("focusout", "input[data-cart-qty-input]", function () {
